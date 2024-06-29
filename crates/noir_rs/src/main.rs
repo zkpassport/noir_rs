@@ -1,25 +1,54 @@
 use acir::{
     native_types::{Witness, WitnessMap},
-    FieldElement,
+    FieldElement
 };
 use prove::prove;
 use tracing::info;
 use verify::verify;
+use bb_rs::barretenberg_api::{
+    srs::init_srs,
+    common::example_simple_create_and_verify_proof,
+    acir::get_circuit_sizes
+};
 
 pub mod prove;
 pub mod srs;
 pub mod verify;
 
-const BYTECODE: &str = "H4sIAAAAAAAA/7WUPQ7DIAyFTZNWHXsUm59gtlylqOT+J6iqqqmCiDfMW2CwzGc/mxkArnDWtJ/rfjpcvC/RFnL0RJsyB/QhL0xMgcPLsnOFPceUU8RE3hXaQnIb/lTnwj6RUeS66HHht2dG6KVpeol9Ik1m03j+n4WbwF/Htfd7FfdWrLV9t2V5CJwnD1ZFmBFmTgPyzqC7vCPqnvU9QhAGYkRPsVMGjuUxArP0kcAH+JIvC64FAAA=";
+const BYTECODE: &str = "H4sIAAAAAAAA/62QQQ6AMAgErfFBUKCFm1+xsf3/E9TYxka96SQEwmGyWTecjPu44aLdc93wDWzOu5cgMOfoMxIu4C2pAEsKioqisnolysoaLVkEQ6aMRYxKFY//ZYQj29T10XfhXv4PNvD4VlxNAQAA";
 
 fn main() {
     tracing_subscriber::fmt::init();
 
     let mut initial_witness = WitnessMap::new();
-    initial_witness.insert(Witness(1), FieldElement::zero());
+    initial_witness.insert(Witness(1), FieldElement::one());
     initial_witness.insert(Witness(2), FieldElement::one());
+    initial_witness.insert(Witness(3), FieldElement::one());
 
     let (proof, vk) = prove(String::from(BYTECODE), initial_witness).unwrap();
     let verdict = verify(String::from(BYTECODE), proof, vk).unwrap();
     info!("proof verification verdict: {}", verdict);
 }
+
+#[test]
+fn test_common_example() {
+    assert!(unsafe { 
+        let subgroup_size = 524289;
+        let srs = srs::netsrs::NetSrs::new(subgroup_size + 1);
+        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
+        example_simple_create_and_verify_proof() 
+    });
+}
+
+
+#[test]
+fn test_acir_get_circuit_size() {
+    let constraint_system_buf: [u8; 333] = [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 49, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 51, 48, 54, 52, 52, 101, 55, 50, 101, 49, 51, 49, 97, 48, 50, 57, 98, 56, 53, 48, 52, 53, 98, 54, 56, 49, 56, 49, 53, 56, 53, 100, 50, 56, 51, 51, 101, 56, 52, 56, 55, 57, 98, 57, 55, 48, 57, 49, 52, 51, 101, 49, 102, 53, 57, 51, 102, 48, 48, 48, 48, 48, 48, 48, 2, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 1, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let circuit_sizes = unsafe { 
+        get_circuit_sizes(&constraint_system_buf) 
+    }; 
+    assert_eq!(circuit_sizes.exact, 13);
+    assert_eq!(circuit_sizes.total, 18);
+    assert_eq!(circuit_sizes.subgroup, 32);
+}
+

@@ -31,8 +31,9 @@ impl NargoError {
                 OpcodeResolutionError::IndexOutOfBounds { .. }
                 | OpcodeResolutionError::OpcodeNotSolvable(_)
                 | OpcodeResolutionError::UnsatisfiedConstrain { .. } => None,
-                OpcodeResolutionError::BrilligFunctionFailed { message, .. } => Some(message),
+                OpcodeResolutionError::BrilligFunctionFailed { call_stack, .. } => Some("Brillig function failed"),
                 OpcodeResolutionError::BlackBoxFunctionFailed(_, reason) => Some(reason),
+                _ => None,
             },
         }
     }

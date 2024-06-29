@@ -1,17 +1,18 @@
 use std::io::Read;
 
-use acir::{circuit::Circuit, native_types::WitnessMap};
+use acir::{circuit::{self, Circuit, Program}, native_types::WitnessMap};
 use base64::{engine::general_purpose, Engine};
 use bb_rs::barretenberg_api::{
     acir::{
         acir_create_proof, acir_get_verification_key, acir_init_proving_key, delete_acir_composer,
-        get_circuit_sizes, new_acir_composer,
+        get_circuit_sizes, new_acir_composer, CircuitSizes, acir_create_circuit
     },
     srs::init_srs,
 };
 use bn254_blackbox_solver::Bn254BlackBoxSolver;
 use flate2::bufread::GzDecoder;
 use nargo::ops::execute::execute_circuit;
+use serde::Deserialize;
 
 use crate::srs::netsrs::NetSrs;
 
@@ -22,8 +23,8 @@ pub fn prove(
     let acir_buffer = general_purpose::STANDARD
         .decode(circuit_bytecode)
         .map_err(|e| e.to_string())?;
-
-    let circuit = Circuit::deserialize_circuit(&acir_buffer).map_err(|e| e.to_string())?;
+    
+    let program = Program::deserialize_program(&acir_buffer).map_err(|e| e.to_string())?;
 
     let mut decoder = GzDecoder::new(acir_buffer.as_slice());
     let mut acir_buffer_uncompressed = Vec::<u8>::new();
@@ -34,10 +35,9 @@ pub fn prove(
     let blackbox_solver = Bn254BlackBoxSolver::new();
 
     let solved_witness =
-        execute_circuit(&circuit, initial_witness, &blackbox_solver).map_err(|e| e.to_string())?;
+        execute_circuit(&program, initial_witness, &blackbox_solver).map_err(|e| e.to_string())?;
     let serialized_solved_witness =
-        bincode::serialize(&solved_witness).map_err(|e| e.to_string())?;
-
+        bincode::serialize(&solved_witness).map_err(|e| e.to_string())?; 
     let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed) };
     let log_value = (circuit_size.total as f64).log2().ceil() as u32;
     let subgroup_size = 2u32.pow(log_value);
