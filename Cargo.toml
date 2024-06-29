@@ -3,7 +3,7 @@ members = ["crates/nargo", "crates/noir_rs"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.30.0"
 edition = "2021"
 authors = ["Bartosz Nowak"]
 
