@@ -60,12 +60,15 @@ pub fn execute_circuit<B: BlackBoxFunctionSolver>(
                     None => ExecutionError::SolvingError(error),
                 }));
             }
-            ACVMStatus::RequiresForeignCall(_foreign_call) => {},
-            _ => unreachable!("Unexpected ACVM status"),
+            // TODO: Handle foreign calls and ACIR calls
+            ACVMStatus::RequiresForeignCall(_foreign_call) => {
+                return Err(NargoError::CompilationError);
+            },
+            ACVMStatus::RequiresAcirCall(_acir_call) => {
+                return Err(NargoError::CompilationError);
+            },
         }
     }
-
-    println!("acvm finalizing");
 
     Ok(acvm.finalize())
 }
