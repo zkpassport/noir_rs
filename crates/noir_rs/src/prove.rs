@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use acir::{circuit::{self, Circuit, Program}, native_types::WitnessMap};
+use acir::{circuit::{self, Circuit, Program}, native_types::{WitnessMap, WitnessStack}};
 use base64::{engine::general_purpose, Engine};
 use bb_rs::barretenberg_api::{
     acir::{
@@ -12,7 +12,7 @@ use bb_rs::barretenberg_api::{
 use bn254_blackbox_solver::Bn254BlackBoxSolver;
 use flate2::bufread::GzDecoder;
 use nargo::ops::execute::execute_circuit;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::srs::netsrs::NetSrs;
 
@@ -36,8 +36,10 @@ pub fn prove(
 
     let solved_witness =
         execute_circuit(&program, initial_witness, &blackbox_solver).map_err(|e| e.to_string())?;
+    let witness_stack = WitnessStack::try_from(solved_witness).map_err(|e| e.to_string())?;
     let serialized_solved_witness =
-        bincode::serialize(&solved_witness).map_err(|e| e.to_string())?; 
+        bincode::serialize(&witness_stack).map_err(|e| e.to_string())?;
+        
     let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed) };
     let log_value = (circuit_size.total as f64).log2().ceil() as u32;
     let subgroup_size = 2u32.pow(log_value);
