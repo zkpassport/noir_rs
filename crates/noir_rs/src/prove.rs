@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use acir::{circuit::{self, Circuit, Program}, native_types::{WitnessMap, WitnessStack}};
+use acir::{circuit::{self, Circuit, Program}, native_types::{WitnessMap, WitnessStack}, FieldElement};
 use base64::{engine::general_purpose, Engine};
 use bb_rs::barretenberg_api::{
     acir::{
@@ -18,7 +18,7 @@ use crate::srs::netsrs::NetSrs;
 
 pub fn prove(
     circuit_bytecode: String,
-    initial_witness: WitnessMap,
+    initial_witness: WitnessMap<FieldElement>,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
     let acir_buffer = general_purpose::STANDARD
         .decode(circuit_bytecode)
@@ -32,7 +32,7 @@ pub fn prove(
         .read_to_end(&mut acir_buffer_uncompressed)
         .map_err(|e| e.to_string())?;
 
-    let blackbox_solver = Bn254BlackBoxSolver::new();
+    let blackbox_solver = Bn254BlackBoxSolver::default();
 
     let solved_witness =
         execute_circuit(&program, initial_witness, &blackbox_solver).map_err(|e| e.to_string())?;

@@ -1,3 +1,4 @@
+use acir::FieldElement;
 use acvm::{acir::circuit::OpcodeLocation, pwg::OpcodeResolutionError};
 
 use thiserror::Error;
@@ -45,5 +46,5 @@ pub enum ExecutionError {
     AssertionFailed(String, Vec<OpcodeLocation>),
 
     #[error(transparent)]
-    SolvingError(#[from] OpcodeResolutionError),
+    SolvingError(#[from] OpcodeResolutionError<FieldElement>),
 }

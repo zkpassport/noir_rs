@@ -1,4 +1,4 @@
-use acir::{circuit::{Circuit, Program}, native_types::WitnessMap};
+use acir::{circuit::{Circuit, Program}, native_types::WitnessMap, FieldElement};
 use acvm::{
     pwg::{ACVMStatus, ErrorLocation, OpcodeResolutionError, ACVM},
     BlackBoxFunctionSolver,
@@ -7,11 +7,11 @@ use serde::Serialize;
 
 use crate::errors::{ExecutionError, NargoError};
 
-pub fn execute_circuit<B: BlackBoxFunctionSolver>(
-    program: &Program,
-    initial_witness: WitnessMap,
+pub fn execute_circuit<B: BlackBoxFunctionSolver<FieldElement>>(
+    program: &Program<FieldElement>,
+    initial_witness: WitnessMap<FieldElement>,
     blackbox_solver: &B,
-) -> Result<WitnessMap, NargoError> {
+) -> Result<WitnessMap<FieldElement>, NargoError> {
     let circuit = match program.functions.len() {
         0 => return Ok(WitnessMap::new()),
         1 => &program.functions[0],
