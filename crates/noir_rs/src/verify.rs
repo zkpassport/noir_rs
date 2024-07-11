@@ -11,11 +11,7 @@ use flate2::bufread::GzDecoder;
 
 use crate::srs::netsrs::NetSrs;
 
-pub fn verify(
-    circuit_bytecode: String,
-    proof: Vec<u8>,
-    verification_key: Vec<u8>,
-) -> Result<bool, String> {
+fn decode_circuit(circuit_bytecode: String) -> Result<Vec<u8>, String> {
     let acir_buffer = general_purpose::STANDARD
         .decode(circuit_bytecode)
         .map_err(|e| e.to_string())?;
@@ -25,6 +21,16 @@ pub fn verify(
     decoder
         .read_to_end(&mut acir_buffer_uncompressed)
         .map_err(|e| e.to_string())?;
+
+    Ok(acir_buffer_uncompressed)
+}
+
+pub fn verify(
+    circuit_bytecode: String,
+    proof: Vec<u8>,
+    verification_key: Vec<u8>,
+) -> Result<bool, String> {
+    let acir_buffer_uncompressed = decode_circuit(circuit_bytecode)?;
 
     let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed) };
     let log_value = (circuit_size.total as f64).log2().ceil() as u32;
@@ -47,15 +53,7 @@ pub fn verify_honk(
     proof: Vec<u8>,
     verification_key: Vec<u8>,
 ) -> Result<bool, String> {
-    let acir_buffer = general_purpose::STANDARD
-        .decode(circuit_bytecode)
-        .map_err(|e| e.to_string())?;
-
-    let mut decoder = GzDecoder::new(acir_buffer.as_slice());
-    let mut acir_buffer_uncompressed = Vec::<u8>::new();
-    decoder
-        .read_to_end(&mut acir_buffer_uncompressed)
-        .map_err(|e| e.to_string())?;
+    let acir_buffer_uncompressed = decode_circuit(circuit_bytecode)?;
 
     let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed) };
     let log_value = (circuit_size.total as f64).log2().ceil() as u32;

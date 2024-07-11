@@ -15,10 +15,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::srs::netsrs::NetSrs;
 
-pub fn prove(
-    circuit_bytecode: String,
-    initial_witness: WitnessMap<FieldElement>,
-) -> Result<(Vec<u8>, Vec<u8>), String> {
+fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElement>) -> Result<(Vec<u8>, Vec<u8>), String> {
     let acir_buffer = general_purpose::STANDARD
         .decode(circuit_bytecode)
         .map_err(|e| e.to_string())?;
@@ -38,6 +35,15 @@ pub fn prove(
     let witness_stack = WitnessStack::try_from(solved_witness).map_err(|e| e.to_string())?;
     let serialized_solved_witness =
         bincode::serialize(&witness_stack).map_err(|e| e.to_string())?;
+
+    Ok((serialized_solved_witness, acir_buffer_uncompressed))
+}
+
+pub fn prove(
+    circuit_bytecode: String,
+    initial_witness: WitnessMap<FieldElement>,
+) -> Result<(Vec<u8>, Vec<u8>), String> {
+    let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
         
     let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed) };
     let log_value = (circuit_size.total as f64).log2().ceil() as u32;
@@ -67,26 +73,8 @@ pub fn prove_honk(
     circuit_bytecode: String,
     initial_witness: WitnessMap<FieldElement>,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
-    let acir_buffer = general_purpose::STANDARD
-        .decode(circuit_bytecode)
-        .map_err(|e| e.to_string())?;
+    let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
     
-    let program = Program::deserialize_program(&acir_buffer).map_err(|e| e.to_string())?;
-
-    let mut decoder = GzDecoder::new(acir_buffer.as_slice());
-    let mut acir_buffer_uncompressed = Vec::<u8>::new();
-    decoder
-        .read_to_end(&mut acir_buffer_uncompressed)
-        .map_err(|e| e.to_string())?;
-
-    let blackbox_solver = Bn254BlackBoxSolver::default();
-
-    let solved_witness =
-        execute_circuit(&program, initial_witness, &blackbox_solver).map_err(|e| e.to_string())?;
-    let witness_stack = WitnessStack::try_from(solved_witness).map_err(|e| e.to_string())?;
-    let serialized_solved_witness =
-        bincode::serialize(&witness_stack).map_err(|e| e.to_string())?;
-        
     let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed) };
     let log_value = (circuit_size.total as f64).log2().ceil() as u32;
     let subgroup_size = 2u32.pow(log_value);

@@ -2,6 +2,7 @@ use acir::{
     native_types::{Witness, WitnessMap},
     FieldElement
 };
+use noir_rs::{prove::prove_honk, verify::verify_honk};
 use prove::prove;
 use tracing::info;
 use verify::verify;
@@ -29,9 +30,15 @@ fn main() {
     // res = a * b
     initial_witness.insert(Witness(2), FieldElement::from(15u128));
 
+    // Ultra Plonk
     let (proof, vk) = prove(String::from(BYTECODE), initial_witness).unwrap();
     let verdict = verify(String::from(BYTECODE), proof, vk).unwrap();
     info!("proof verification verdict: {}", verdict);
+
+    // Honk
+    /*let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness).unwrap();
+    let verdict = verify_honk(String::from(BYTECODE), proof, vk).unwrap();
+    info!("proof verification verdict: {}", verdict);*/
 }
 
 #[test]
