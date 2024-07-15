@@ -31,14 +31,28 @@ fn main() {
     initial_witness.insert(Witness(2), FieldElement::from(15u128));
 
     // Ultra Plonk
+    let mut start = std::time::Instant::now();
     let (proof, vk) = prove(String::from(BYTECODE), initial_witness).unwrap();
+    info!("ultraplonk proof generation time: {:?}", start.elapsed());
+    
     let verdict = verify(String::from(BYTECODE), proof, vk).unwrap();
-    info!("proof verification verdict: {}", verdict);
+    info!("ultraplonk proof verification verdict: {}", verdict);
 
     // Honk
-    /*let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness).unwrap();
+    let mut initial_witness_honk = WitnessMap::new();
+    // a
+    initial_witness_honk.insert(Witness(0), FieldElement::from(5u128));
+    // b
+    initial_witness_honk.insert(Witness(1), FieldElement::from(6u128));
+    // res = a * b
+    initial_witness_honk.insert(Witness(2), FieldElement::from(30u128));
+
+    start = std::time::Instant::now();
+    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk).unwrap();
+    info!("honk proof generation time: {:?}", start.elapsed());
+
     let verdict = verify_honk(String::from(BYTECODE), proof, vk).unwrap();
-    info!("proof verification verdict: {}", verdict);*/
+    info!("honk proof verification verdict: {}", verdict);
 }
 
 #[test]

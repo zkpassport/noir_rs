@@ -4,7 +4,7 @@ use acir::{circuit::{self, Circuit, Program}, native_types::{WitnessMap, Witness
 use base64::{engine::general_purpose, Engine};
 use bb_rs::barretenberg_api::{
     acir::{
-        acir_create_circuit, acir_create_proof, acir_get_honk_verification_key, acir_get_verification_key, acir_init_proving_key, acir_prove_ultra_honk, delete_acir_composer, get_circuit_sizes, new_acir_composer, CircuitSizes
+        acir_create_circuit, acir_create_proof, acir_get_honk_verification_key, acir_get_verification_key, acir_init_proving_key, acir_prove_and_verify_ultra_honk, acir_prove_ultra_honk, delete_acir_composer, get_circuit_sizes, new_acir_composer, CircuitSizes
     },
     srs::init_srs,
 };
