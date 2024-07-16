@@ -22,6 +22,10 @@ impl NetSrs {
         })
     }
 
+    pub fn to_srs(self) -> Srs {
+        self.0
+    }
+
     fn download_g1_data(num_points: u32) -> Vec<u8> {
         const G1_START: u32 = 28;
         let g1_end: u32 = G1_START + num_points * 64 - 1;

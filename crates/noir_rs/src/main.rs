@@ -32,10 +32,10 @@ fn main() {
 
     // Ultra Plonk
     let mut start = std::time::Instant::now();
-    let (proof, vk) = prove(String::from(BYTECODE), initial_witness).unwrap();
+    let (proof, vk) = prove(String::from(BYTECODE), initial_witness, None).unwrap();
     info!("ultraplonk proof generation time: {:?}", start.elapsed());
-    
-    let verdict = verify(String::from(BYTECODE), proof, vk).unwrap();
+
+    let verdict = verify(String::from(BYTECODE), proof, vk, None).unwrap();
     info!("ultraplonk proof verification verdict: {}", verdict);
 
     // Honk
@@ -48,10 +48,10 @@ fn main() {
     initial_witness_honk.insert(Witness(2), FieldElement::from(30u128));
 
     start = std::time::Instant::now();
-    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk).unwrap();
+    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk, None).unwrap();
     info!("honk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify_honk(String::from(BYTECODE), proof, vk).unwrap();
+    let verdict = verify_honk(String::from(BYTECODE), proof, vk, None).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 
