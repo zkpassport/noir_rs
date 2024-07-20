@@ -1,3 +1,4 @@
+use core::num;
 use std::io::Read;
 
 use acir::{circuit::{self, Circuit, Program}, native_types::{WitnessMap, WitnessStack}, FieldElement};
@@ -42,16 +43,12 @@ fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElem
 pub fn prove(
     circuit_bytecode: String,
     initial_witness: WitnessMap<FieldElement>,
-    srs_path: Option<&str>,
+    num_points: u32,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
     let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
-        
-    let srs: Srs = get_srs(&acir_buffer_uncompressed, srs_path);
 
     Ok(unsafe {
-        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
-        let mut acir_ptr = new_acir_composer(srs.num_points - 1);
-        //acir_init_proving_key(&mut acir_ptr, &acir_buffer_uncompressed);
+        let mut acir_ptr = new_acir_composer(num_points - 1);
         let result = (
             acir_create_proof(
                 &mut acir_ptr,
@@ -69,14 +66,10 @@ pub fn prove(
 pub fn prove_honk(
     circuit_bytecode: String,
     initial_witness: WitnessMap<FieldElement>,
-    srs_path: Option<&str>,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
     let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
-    
-    let srs: Srs = get_srs(&acir_buffer_uncompressed, srs_path);
 
     Ok(unsafe {
-        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
         let result = (
             acir_prove_ultra_honk(
                 &acir_buffer_uncompressed,

@@ -29,15 +29,12 @@ pub fn verify(
     circuit_bytecode: String,
     proof: Vec<u8>,
     verification_key: Vec<u8>,
-    srs_path: Option<&str>,
+    num_points: u32,
 ) -> Result<bool, String> {
     let acir_buffer_uncompressed = decode_circuit(circuit_bytecode)?;
 
-    let srs: Srs = get_srs(&acir_buffer_uncompressed, srs_path);
-
     Ok(unsafe {
-        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
-        let mut acir_ptr = new_acir_composer(srs.num_points - 1);
+        let mut acir_ptr = new_acir_composer(num_points - 1);
         acir_load_verification_key(&mut acir_ptr, &verification_key);
         let result = acir_verify_proof(&mut acir_ptr, &proof);
         delete_acir_composer(acir_ptr);
@@ -49,14 +46,10 @@ pub fn verify_honk(
     circuit_bytecode: String,
     proof: Vec<u8>,
     verification_key: Vec<u8>,
-    srs_path: Option<&str>,
 ) -> Result<bool, String> {
     let acir_buffer_uncompressed = decode_circuit(circuit_bytecode)?;
 
-    let srs: Srs = get_srs(&acir_buffer_uncompressed, srs_path);
-
     Ok(unsafe {
-        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
         let result = acir_verify_ultra_honk( &proof, &verification_key);
         result
     })

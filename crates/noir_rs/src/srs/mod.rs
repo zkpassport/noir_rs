@@ -1,6 +1,9 @@
 pub mod localsrs;
 pub mod netsrs;
 use serde::{Deserialize, Serialize};
+use flate2::bufread::GzDecoder;
+use base64::{engine::general_purpose, Engine};
+use std::io::Read;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Srs {
@@ -38,4 +41,22 @@ pub fn get_srs(acir_buffer_uncompressed: &[u8], srs_path: Option<&str>) -> Srs {
             net_srs.to_srs()
         }
     }
+}
+
+pub fn setup_srs(circuit_bytecode: String, srs_path: Option<&str>) ->  Result<u32, String> {
+    let acir_buffer = general_purpose::STANDARD
+        .decode(circuit_bytecode)
+        .map_err(|e| e.to_string())?;
+    
+    let mut decoder = GzDecoder::new(acir_buffer.as_slice());
+    let mut acir_buffer_uncompressed = Vec::<u8>::new();
+    decoder
+        .read_to_end(&mut acir_buffer_uncompressed)
+        .map_err(|e| e.to_string())?;
+
+    let srs = get_srs(&acir_buffer_uncompressed, srs_path);
+    unsafe {
+        bb_rs::barretenberg_api::srs::init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
+    }
+    Ok(srs.num_points)
 }

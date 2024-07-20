@@ -1,8 +1,10 @@
+use core::num;
+
 use acir::{
     native_types::{Witness, WitnessMap},
     FieldElement
 };
-use noir_rs::{prove::prove_honk, verify::verify_honk};
+use noir_rs::{prove::prove_honk, srs::setup_srs, verify::verify_honk};
 use prove::prove;
 use tracing::info;
 use verify::verify;
@@ -30,12 +32,15 @@ fn main() {
     // res = a * b
     initial_witness.insert(Witness(2), FieldElement::from(15u128));
 
+    // Setup SRS
+    let num_points = setup_srs(String::from(BYTECODE), None).unwrap();
+
     // Ultra Plonk
     let mut start = std::time::Instant::now();
-    let (proof, vk) = prove(String::from(BYTECODE), initial_witness, None).unwrap();
+    let (proof, vk) = prove(String::from(BYTECODE), initial_witness, num_points.clone()).unwrap();
     info!("ultraplonk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify(String::from(BYTECODE), proof, vk, None).unwrap();
+    let verdict = verify(String::from(BYTECODE), proof, vk, num_points).unwrap();
     info!("ultraplonk proof verification verdict: {}", verdict);
 
     // Honk
@@ -48,10 +53,10 @@ fn main() {
     initial_witness_honk.insert(Witness(2), FieldElement::from(30u128));
 
     start = std::time::Instant::now();
-    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk, None).unwrap();
+    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk).unwrap();
     info!("honk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify_honk(String::from(BYTECODE), proof, vk, None).unwrap();
+    let verdict = verify_honk(String::from(BYTECODE), proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 
