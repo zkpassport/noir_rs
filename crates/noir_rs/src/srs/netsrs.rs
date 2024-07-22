@@ -2,7 +2,7 @@ use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, RANGE};
 use std::ops::Deref;
 
-use super::Srs;
+use super::{Srs, G2};
 
 pub struct NetSrs(pub Srs);
 
@@ -18,7 +18,7 @@ impl NetSrs {
         NetSrs(Srs {
             num_points,
             g1_data: Self::download_g1_data(num_points),
-            g2_data: Self::download_g2_data(),
+            g2_data: G2.to_vec(),
         })
     }
 

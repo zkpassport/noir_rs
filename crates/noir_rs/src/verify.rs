@@ -9,21 +9,8 @@ use bb_rs::barretenberg_api::{
 };
 use flate2::bufread::GzDecoder;
 
-use crate::srs::{netsrs::NetSrs, Srs, get_srs};
+use crate::{srs::{get_srs, netsrs::NetSrs, Srs}, utils::decode_circuit};
 
-fn decode_circuit(circuit_bytecode: String) -> Result<Vec<u8>, String> {
-    let acir_buffer = general_purpose::STANDARD
-        .decode(circuit_bytecode)
-        .map_err(|e| e.to_string())?;
-
-    let mut decoder = GzDecoder::new(acir_buffer.as_slice());
-    let mut acir_buffer_uncompressed = Vec::<u8>::new();
-    decoder
-        .read_to_end(&mut acir_buffer_uncompressed)
-        .map_err(|e| e.to_string())?;
-
-    Ok(acir_buffer_uncompressed)
-}
 
 pub fn verify(
     circuit_bytecode: String,
@@ -31,7 +18,7 @@ pub fn verify(
     verification_key: Vec<u8>,
     num_points: u32,
 ) -> Result<bool, String> {
-    let acir_buffer_uncompressed = decode_circuit(circuit_bytecode)?;
+    let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)?;
 
     Ok(unsafe {
         let mut acir_ptr = new_acir_composer(num_points - 1);
@@ -47,7 +34,7 @@ pub fn verify_honk(
     proof: Vec<u8>,
     verification_key: Vec<u8>,
 ) -> Result<bool, String> {
-    let acir_buffer_uncompressed = decode_circuit(circuit_bytecode)?;
+    let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)?;
 
     Ok(unsafe {
         let result = acir_verify_ultra_honk( &proof, &verification_key);

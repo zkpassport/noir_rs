@@ -5,6 +5,11 @@ use flate2::bufread::GzDecoder;
 use base64::{engine::general_purpose, Engine};
 use std::io::Read;
 
+use crate::utils::{decode_circuit, get_subgroup_size};
+
+// G2 is a small fixed group, so we can hardcode it here
+const G2: [u8; 128] = [126, 35, 31, 236, 147, 136, 131, 176, 159, 89, 68, 7, 59, 50, 7, 139, 188, 137, 181, 179, 152, 181, 151, 78, 1, 24, 196, 213, 184, 55, 188, 194, 78, 254, 48, 250, 192, 147, 131, 193, 234, 81, 216, 122, 53, 142, 3, 139, 231, 255, 78, 88, 7, 145, 222, 232, 38, 14, 1, 178, 81, 246, 241, 199, 133, 74, 135, 212, 218, 204, 94, 85, 17, 230, 221, 63, 150, 230, 206, 162, 86, 71, 91, 66, 20, 229, 97, 94, 34, 254, 189, 163, 192, 192, 99, 42, 238, 65, 60, 128, 218, 106, 95, 228, 156, 242, 160, 70, 65, 249, 155, 164, 210, 81, 86, 193, 187, 154, 114, 133, 4, 252, 99, 105, 247, 17, 15, 227];
+
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Srs {
     pub g1_data: Vec<u8>,
@@ -26,15 +31,20 @@ impl Srs {
 }
 
 
-pub fn get_srs(acir_buffer_uncompressed: &[u8], srs_path: Option<&str>) -> Srs {
-    let circuit_size = unsafe { bb_rs::barretenberg_api::acir::get_circuit_sizes(&acir_buffer_uncompressed) };
-    let log_value = (circuit_size.total as f64).log2().ceil() as u32;
-    let subgroup_size = 2u32.pow(log_value);
+pub fn get_srs(circuit_bytecode: String, srs_path: Option<&str>) -> Srs {
+    let subgroup_size = get_subgroup_size(circuit_bytecode);
 
     match srs_path {
         Some(path) => {
-            let local_srs = localsrs::LocalSrs::from_dat_file(subgroup_size + 1, srs_path);
-            local_srs.to_srs()
+            if path.ends_with(".dat") {
+                // Interpret as a .dat file
+                let local_srs = localsrs::LocalSrs::from_dat_file(subgroup_size + 1, srs_path);
+                local_srs.to_srs()
+            } else {
+                // Otherwise interpret as a .local file (i.e. a serialized SRS struct)
+                let local_srs = localsrs::LocalSrs::new(subgroup_size + 1, srs_path);
+                local_srs.to_srs()
+            }
         }
         None => {
             let net_srs = netsrs::NetSrs::new(subgroup_size + 1);
@@ -44,17 +54,7 @@ pub fn get_srs(acir_buffer_uncompressed: &[u8], srs_path: Option<&str>) -> Srs {
 }
 
 pub fn setup_srs(circuit_bytecode: String, srs_path: Option<&str>) ->  Result<u32, String> {
-    let acir_buffer = general_purpose::STANDARD
-        .decode(circuit_bytecode)
-        .map_err(|e| e.to_string())?;
-    
-    let mut decoder = GzDecoder::new(acir_buffer.as_slice());
-    let mut acir_buffer_uncompressed = Vec::<u8>::new();
-    decoder
-        .read_to_end(&mut acir_buffer_uncompressed)
-        .map_err(|e| e.to_string())?;
-
-    let srs = get_srs(&acir_buffer_uncompressed, srs_path);
+    let srs = get_srs(circuit_bytecode, srs_path);
     unsafe {
         bb_rs::barretenberg_api::srs::init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
     }

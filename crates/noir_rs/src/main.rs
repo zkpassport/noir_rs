@@ -17,6 +17,7 @@ use bb_rs::barretenberg_api::{
 pub mod prove;
 pub mod srs;
 pub mod verify;
+pub mod utils;
 
 const BYTECODE: &str = "H4sIAAAAAAAA/62QQQ6AMAgErfFBUKCFm1+xsf3/E9TYxka96SQEwmGyWTecjPu44aLdc93wDWzOu5cgMOfoMxIu4C2pAEsKioqisnolysoaLVkEQ6aMRYxKFY//ZYQj29T10XfhXv4PNvD4VlxNAQAA";
 
