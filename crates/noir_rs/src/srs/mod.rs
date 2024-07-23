@@ -22,7 +22,7 @@ impl Srs {
         match self.num_points.cmp(&num_points) {
             std::cmp::Ordering::Equal => self,
             _ => Srs {
-                g1_data: self.g1_data[..(num_points * 64 - 1) as usize].to_vec(),
+                g1_data: self.g1_data[..=(num_points * 64 - 1) as usize].to_vec(),
                 g2_data: self.g2_data,
                 num_points: num_points,
             },
