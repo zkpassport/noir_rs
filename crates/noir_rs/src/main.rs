@@ -4,16 +4,11 @@ use acir::{
     native_types::{Witness, WitnessMap},
     FieldElement
 };
-use noir_rs::{prove::prove_honk, srs::setup_srs, verify::verify_honk};
+use bb_rs::barretenberg_api::{acir::get_circuit_sizes, common::example_simple_create_and_verify_proof, srs::init_srs};
+use noir_rs::{prove::prove_honk, srs::setup_srs, utils::decode_circuit, verify::verify_honk};
 use prove::prove;
 use tracing::info;
 use verify::verify;
-use bb_rs::barretenberg_api::{
-    srs::init_srs,
-    common::example_simple_create_and_verify_proof,
-    acir::get_circuit_sizes
-};
-
 pub mod prove;
 pub mod srs;
 pub mod verify;
@@ -41,7 +36,7 @@ fn main() {
     let (proof, vk) = prove(String::from(BYTECODE), initial_witness, num_points.clone()).unwrap();
     info!("ultraplonk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify(String::from(BYTECODE), proof, vk, num_points).unwrap();
+    let verdict = verify(proof, vk, num_points).unwrap();
     info!("ultraplonk proof verification verdict: {}", verdict);
 
     // Honk
@@ -57,7 +52,7 @@ fn main() {
     let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk).unwrap();
     info!("honk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify_honk(String::from(BYTECODE), proof, vk).unwrap();
+    let verdict = verify_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 
@@ -75,13 +70,12 @@ fn test_common_example() {
 
 #[test]
 fn test_acir_get_circuit_size() {
-    // The uncompressed acir buffer for the circuit represented by the bytecode above
-    let constraint_system_buf: [u8; 333] = [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 49, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 51, 48, 54, 52, 52, 101, 55, 50, 101, 49, 51, 49, 97, 48, 50, 57, 98, 56, 53, 48, 52, 53, 98, 54, 56, 49, 56, 49, 53, 56, 53, 100, 50, 56, 51, 51, 101, 56, 52, 56, 55, 57, 98, 57, 55, 48, 57, 49, 52, 51, 101, 49, 102, 53, 57, 51, 102, 48, 48, 48, 48, 48, 48, 48, 2, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 1, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let (_, constraint_system_buf) = decode_circuit(String::from(BYTECODE)).unwrap();
     let circuit_sizes = unsafe { 
-        get_circuit_sizes(&constraint_system_buf) 
+        get_circuit_sizes(&constraint_system_buf, false) 
     }; 
-    assert_eq!(circuit_sizes.exact, 13);
-    assert_eq!(circuit_sizes.total, 18);
-    assert_eq!(circuit_sizes.subgroup, 32);
+    assert_eq!(circuit_sizes.exact, 2);
+    assert_eq!(circuit_sizes.total, 7);
+    assert_eq!(circuit_sizes.subgroup, 8);
 }
 

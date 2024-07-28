@@ -1,20 +1,14 @@
 use core::num;
 use std::io::Read;
 
-use acir::{circuit::{self, Circuit, Program}, native_types::{WitnessMap, WitnessStack}, FieldElement};
+use acir::{circuit::Program, native_types::{WitnessMap, WitnessStack}, FieldElement};
 use base64::{engine::general_purpose, Engine};
-use bb_rs::barretenberg_api::{
-    acir::{
-        acir_create_circuit, acir_create_proof, acir_get_honk_verification_key, acir_get_verification_key, acir_init_proving_key, acir_prove_and_verify_ultra_honk, acir_prove_ultra_honk, delete_acir_composer, get_circuit_sizes, new_acir_composer, CircuitSizes
-    },
-    srs::init_srs,
+use bb_rs::barretenberg_api::acir::{
+        acir_create_proof, acir_get_honk_verification_key, acir_get_verification_key, acir_prove_ultra_honk, delete_acir_composer, new_acir_composer, CircuitSizes
 };
 use bn254_blackbox_solver::Bn254BlackBoxSolver;
 use flate2::bufread::GzDecoder;
 use nargo::ops::execute::execute_circuit;
-use serde::{Deserialize, Serialize};
-
-use crate::srs::{localsrs::LocalSrs, netsrs::NetSrs, Srs, get_srs};
 
 fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElement>) -> Result<(Vec<u8>, Vec<u8>), String> {
     let acir_buffer = general_purpose::STANDARD

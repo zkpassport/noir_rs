@@ -24,7 +24,7 @@ pub fn get_subgroup_size(circuit_bytecode: String) -> u32 {
         return 0;
     };  
 
-    let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed) };
+    let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed, false) };
     let log_value = (circuit_size.total as f64).log2().ceil() as u32;
     let subgroup_size = 2u32.pow(log_value);
     subgroup_size

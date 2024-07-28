@@ -1,25 +1,13 @@
-use std::io::Read;
-
-use base64::{engine::general_purpose, Engine};
-use bb_rs::barretenberg_api::{
-    acir::{
-        acir_load_verification_key, acir_verify_proof, acir_verify_ultra_honk, delete_acir_composer, get_circuit_sizes, new_acir_composer
-    },
-    srs::init_srs,
+use bb_rs::barretenberg_api::acir::{
+    acir_load_verification_key, acir_verify_proof, acir_verify_ultra_honk, delete_acir_composer, new_acir_composer
 };
-use flate2::bufread::GzDecoder;
-
-use crate::{srs::{get_srs, netsrs::NetSrs, Srs}, utils::decode_circuit};
 
 
 pub fn verify(
-    circuit_bytecode: String,
     proof: Vec<u8>,
     verification_key: Vec<u8>,
     num_points: u32,
 ) -> Result<bool, String> {
-    let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)?;
-
     Ok(unsafe {
         let mut acir_ptr = new_acir_composer(num_points - 1);
         acir_load_verification_key(&mut acir_ptr, &verification_key);
@@ -30,12 +18,9 @@ pub fn verify(
 }
 
 pub fn verify_honk(
-    circuit_bytecode: String,
     proof: Vec<u8>,
     verification_key: Vec<u8>,
 ) -> Result<bool, String> {
-    let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)?;
-
     Ok(unsafe {
         let result = acir_verify_ultra_honk( &proof, &verification_key);
         result

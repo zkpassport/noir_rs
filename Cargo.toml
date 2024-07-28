@@ -3,20 +3,20 @@ members = ["crates/nargo", "crates/noir_rs"]
 resolver = "2"
 
 [workspace.package]
-version = "0.31.0"
+version = "0.32.0"
 edition = "2021"
 authors = ["Bartosz Nowak"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
-acir = { git = "https://github.com/noir-lang/noir.git", tag = "v0.31.0", package = "acir" }
-acvm = { git = "https://github.com/noir-lang/noir.git", tag = "v0.31.0", package = "acvm" }
-acvm_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", tag = "v0.31.0", package = "acvm_blackbox_solver" }
+acir = { git = "https://github.com/noir-lang/noir.git", tag = "v0.32.0", package = "acir" }
+acvm = { git = "https://github.com/noir-lang/noir.git", tag = "v0.32.0", package = "acvm" }
+acvm_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", tag = "v0.32.0", package = "acvm_blackbox_solver" }
 base64 = "0.22.0"
-bb_rs = { git = "https://github.com/madztheo/aztec-packages.git", branch = "v0.41.0" }
+bb_rs = { git = "https://github.com/madztheo/aztec-packages.git", branch = "v0.46.1" }
 bincode = "1.3.3"
-bn254_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", tag = "v0.31.0", package = "bn254_blackbox_solver" }
+bn254_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", tag = "v0.32.0", package = "bn254_blackbox_solver" }
 flate2 = "1.0.28"
 hex = "0.4.3"
 nargo = { path = "crates/nargo" }
