@@ -1,7 +1,7 @@
 use std::io::Read;
 use base64::{engine::general_purpose, Engine};
 use flate2::bufread::GzDecoder;
-use bb_rs::barretenberg_api::acir::{get_circuit_sizes,CircuitSizes};
+use bb_rs::barretenberg_api::acir::get_circuit_sizes;
 
 pub fn decode_circuit(circuit_bytecode: String) -> Result<(Vec<u8>, Vec<u8>), String> {
     let acir_buffer = general_purpose::STANDARD

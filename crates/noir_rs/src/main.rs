@@ -41,7 +41,7 @@ fn main() {
     let (proof, vk) = prove(String::from(BYTECODE), initial_witness, num_points.clone()).unwrap();
     info!("ultraplonk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify(String::from(BYTECODE), proof, vk, num_points).unwrap();
+    let verdict = verify(proof, vk, num_points).unwrap();
     info!("ultraplonk proof verification verdict: {}", verdict);
 
     // Honk
@@ -57,7 +57,7 @@ fn main() {
     let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk).unwrap();
     info!("honk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify_honk(String::from(BYTECODE), proof, vk).unwrap();
+    let verdict = verify_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 
