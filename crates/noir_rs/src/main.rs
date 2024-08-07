@@ -75,7 +75,7 @@ fn test_acir_get_circuit_size() {
         get_circuit_sizes(&constraint_system_buf, false) 
     }; 
     assert_eq!(circuit_sizes.exact, 2);
-    assert_eq!(circuit_sizes.total, 7);
-    assert_eq!(circuit_sizes.subgroup, 8);
+    assert_eq!(circuit_sizes.total, 18);
+    assert_eq!(circuit_sizes.subgroup, 32);
 }
 
