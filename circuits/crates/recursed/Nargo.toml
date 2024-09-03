@@ -1,0 +1,7 @@
+[package]
+name = "recursed"
+type = "bin"
+authors = ["Theo Madzou"]
+compiler_version = ">=0.32.0"
+
+[dependencies]
