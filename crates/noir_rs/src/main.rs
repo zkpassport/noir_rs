@@ -78,11 +78,13 @@ fn test_acir_get_circuit_size() {
         get_circuit_sizes(&constraint_system_buf, false) 
     }; 
     assert_eq!(circuit_sizes.exact, 2);
-    assert_eq!(circuit_sizes.total, 18);
+    assert_eq!(circuit_sizes.total, 22);
     assert_eq!(circuit_sizes.subgroup, 32);
 }
 
 
+// TODO: Fix recursion with Noir 0.34.0 as this test fails
+// The verification key is incorrect but the key hash is correct somehow
 #[test]
 fn test_honk_recursive_proving() {
     // Read the JSON manifest of the circuit 
@@ -104,13 +106,13 @@ fn test_honk_recursive_proving() {
 
     let (proof_as_fields, vk_as_fields, key_hash) = recursion::generate_recursive_honk_proof_artifacts(recursed_proof, recursed_vk).unwrap();
 
-    //println!("proof: {:?}", proof);
-    //println!("vk: {:?}", vk);
+    //println!("proof: {:?}", proof_as_fields);
+    //println!("vk: {:?}", vk_as_fields);
     //println!("key_hash: {:?}", key_hash);
     
-    assert_eq!(proof_as_fields.len(), 409);
-    assert_eq!(vk_as_fields.len(), 103);
-    assert_eq!(key_hash, "0x27513cb06f87ca6ec629f8a71548dc904c467655667a23ba85c59d7ca3b8db98");
+    assert_eq!(proof_as_fields.len(), 439);
+    assert_eq!(vk_as_fields.len(), 128);
+    assert_eq!(key_hash, "0x136e20081ed04b86e7b16070097ccb220634ac0923d863bcf96f8502a2279219");
 
     // Read the JSON manifest of the circuit 
     let recursive_circuit_txt = std::fs::read_to_string("../../circuits/target/recursive.json").unwrap();
