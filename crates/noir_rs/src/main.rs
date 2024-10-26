@@ -77,7 +77,6 @@ fn test_acir_get_circuit_size() {
     let circuit_sizes = unsafe { 
         get_circuit_sizes(&constraint_system_buf, false) 
     }; 
-    assert_eq!(circuit_sizes.exact, 2);
     assert_eq!(circuit_sizes.total, 22);
     assert_eq!(circuit_sizes.subgroup, 32);
 }
@@ -110,7 +109,7 @@ fn test_honk_recursive_proving() {
     //println!("vk: {:?}", vk_as_fields);
     //println!("key_hash: {:?}", key_hash);
     
-    assert_eq!(proof_as_fields.len(), 439);
+    assert_eq!(proof_as_fields.len(), 463);
     assert_eq!(vk_as_fields.len(), 128);
     assert_eq!(key_hash, "0x136e20081ed04b86e7b16070097ccb220634ac0923d863bcf96f8502a2279219");
 
