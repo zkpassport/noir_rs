@@ -46,25 +46,4 @@ impl NetSrs {
 
         response.bytes().unwrap().to_vec()
     }
-
-    fn download_g2_data() -> Vec<u8> {
-        const G2_START: usize = 28 + 5040001 * 64;
-        const G2_END: usize = G2_START + 128 - 1;
-
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            RANGE,
-            format!("bytes={}-{}", G2_START, G2_END).parse().unwrap(),
-        );
-
-        let response = Client::new()
-            .get(
-                "https://aztec-ignition.s3.amazonaws.com/MAIN%20IGNITION/monomial/transcript00.dat",
-            )
-            .headers(headers)
-            .send()
-            .unwrap();
-
-        response.bytes().unwrap().to_vec()
-    }
 }

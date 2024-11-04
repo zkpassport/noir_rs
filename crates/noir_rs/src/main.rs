@@ -83,8 +83,6 @@ fn test_acir_get_circuit_size() {
 }
 
 
-// TODO: Fix recursion with Noir 0.34.0 as this test fails
-// The verification key is incorrect but the key hash is correct somehow
 #[test]
 fn test_honk_recursive_proving() {
     // Read the JSON manifest of the circuit 

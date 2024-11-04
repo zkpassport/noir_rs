@@ -1,7 +1,9 @@
 use std::io::Read;
 use base64::{engine::general_purpose, Engine};
 use flate2::bufread::GzDecoder;
-use bb_rs::barretenberg_api::acir::{get_circuit_sizes,CircuitSizes};
+use bb_rs::barretenberg_api::acir::{
+    acir_get_honk_verification_key, acir_vk_as_fields_ultra_honk, get_circuit_sizes,
+};
 
 use crate::recursion;
 
@@ -17,6 +19,21 @@ pub fn decode_circuit(circuit_bytecode: String) -> Result<(Vec<u8>, Vec<u8>), St
         .map_err(|e| e.to_string())?;
 
     Ok((acir_buffer, acir_buffer_uncompressed))
+}
+
+pub fn get_honk_vkey_hash(vk_bytes: Vec<u8>) -> Result<String, String> {
+    Ok(unsafe {
+        let (vk, key_hash) = acir_vk_as_fields_ultra_honk(&vk_bytes);
+        key_hash
+    })
+}
+pub fn get_honk_verification_key(circuit_bytecode: String) -> Result<Vec<u8>, String> {
+    let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)
+        .map_err(|e| format!("Failed to decode circuit: {}", e))?;
+    let result = unsafe {
+        acir_get_honk_verification_key(&acir_buffer_uncompressed)
+    };
+    Ok(result)
 }
 
 pub fn get_subgroup_size(circuit_bytecode: String, recursion: bool) -> u32 {
