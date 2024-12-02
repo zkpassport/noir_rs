@@ -8,7 +8,7 @@ use bb_rs::barretenberg_api::{acir::{
 }, Buffer};
 use bn254_blackbox_solver::Bn254BlackBoxSolver;
 use flate2::bufread::GzDecoder;
-use nargo::ops::execute::execute_circuit;
+use nargo::ops::{execute_program, DefaultForeignCallExecutor};
 
 fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElement>) -> Result<(Vec<u8>, Vec<u8>), String> {
     let acir_buffer = general_purpose::STANDARD
@@ -22,11 +22,11 @@ fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElem
     decoder
         .read_to_end(&mut acir_buffer_uncompressed)
         .map_err(|e| e.to_string())?;
-
     let blackbox_solver = Bn254BlackBoxSolver::default();
+    let mut foreign_call_executor = DefaultForeignCallExecutor::default();
 
     let solved_witness =
-        execute_circuit(&program, initial_witness, &blackbox_solver).map_err(|e| e.to_string())?;
+        execute_program(&program, initial_witness, &blackbox_solver, &mut foreign_call_executor).map_err(|e| e.to_string())?;
     let witness_stack = WitnessStack::try_from(solved_witness).map_err(|e| e.to_string())?;
     let serialized_solved_witness =
         bincode::serialize(&witness_stack).map_err(|e| e.to_string())?;
