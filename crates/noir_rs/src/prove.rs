@@ -8,7 +8,8 @@ use bb_rs::barretenberg_api::{acir::{
 }, Buffer};
 use bn254_blackbox_solver::Bn254BlackBoxSolver;
 use flate2::bufread::GzDecoder;
-use nargo::ops::{execute_program, DefaultForeignCallExecutor};
+use nargo::ops::execute_program;
+use nargo::foreign_calls::DefaultForeignCallExecutor;
 
 fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElement>) -> Result<(Vec<u8>, Vec<u8>), String> {
     let acir_buffer = general_purpose::STANDARD
@@ -38,6 +39,7 @@ pub fn prove(
     circuit_bytecode: String,
     initial_witness: WitnessMap<FieldElement>,
     num_points: u32,
+    recursive: bool,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
     let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
 
@@ -48,6 +50,7 @@ pub fn prove(
                 &mut acir_ptr,
                 &acir_buffer_uncompressed,
                 &serialized_solved_witness,
+                recursive,
             ),
             acir_get_verification_key(&mut acir_ptr),
         );
@@ -60,6 +63,7 @@ pub fn prove(
 pub fn prove_honk(
     circuit_bytecode: String,
     initial_witness: WitnessMap<FieldElement>,
+    recursive: bool,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
     let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
 
@@ -68,8 +72,9 @@ pub fn prove_honk(
             acir_prove_ultra_honk(
                 &acir_buffer_uncompressed,
                 &serialized_solved_witness,
+                recursive,
             ),
-            acir_get_honk_verification_key(&acir_buffer_uncompressed),
+            acir_get_honk_verification_key(&acir_buffer_uncompressed, recursive),
         );
         result
     })

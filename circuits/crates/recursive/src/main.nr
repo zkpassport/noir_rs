@@ -2,9 +2,9 @@ use dep::std;
 
 fn main(
     verification_key: [Field; 128],
-    proof: [Field; 463],
+    proof: [Field; 447],
     public_inputs: pub [Field; 1],
-    key_hash: Field
+    key_hash: Field,
 ) {
     std::verify_proof(verification_key, proof, public_inputs, key_hash);
 }

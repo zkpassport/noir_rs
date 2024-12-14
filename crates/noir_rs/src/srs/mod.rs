@@ -31,8 +31,8 @@ impl Srs {
 }
 
 
-pub fn get_srs(circuit_bytecode: String, srs_path: Option<&str>) -> Srs {
-    let subgroup_size = get_subgroup_size(circuit_bytecode, true);
+pub fn get_srs(circuit_bytecode: String, srs_path: Option<&str>, recursive: bool) -> Srs {
+    let subgroup_size = get_subgroup_size(circuit_bytecode, recursive);
 
     match srs_path {
         Some(path) => {
@@ -53,8 +53,8 @@ pub fn get_srs(circuit_bytecode: String, srs_path: Option<&str>) -> Srs {
     }
 }
 
-pub fn setup_srs(circuit_bytecode: String, srs_path: Option<&str>) ->  Result<u32, String> {
-    let srs = get_srs(circuit_bytecode, srs_path);
+pub fn setup_srs(circuit_bytecode: String, srs_path: Option<&str>, recursive: bool) ->  Result<u32, String> {
+    let srs = get_srs(circuit_bytecode, srs_path, recursive);
     unsafe {
         bb_rs::barretenberg_api::srs::init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
     }

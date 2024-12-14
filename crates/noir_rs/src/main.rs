@@ -17,7 +17,7 @@ pub mod utils;
 pub mod recursion;
 use serde_json;
 
-const BYTECODE: &str = "H4sIAAAAAAAA/62QQQ6AMAgErfFBUKCFm1+xsf3/E9TYxka96SQEwmGyWTecjPu44aLdc93wDWzOu5cgMOfoMxIu4C2pAEsKioqisnolysoaLVkEQ6aMRYxKFY//ZYQj29T10XfhXv4PNvD4VlxNAQAA";
+const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7Dsm66mc9x00O717rhG9ico5cgMOfoMxJu4C2pAEsKioqisnslysoaLVkEQ6aMRYxKFc//ZYQr29L10XfhXv4jB52E+OpMAQAA";
 
 fn main() {
     tracing_subscriber::fmt::init();
@@ -32,11 +32,11 @@ fn main() {
     initial_witness.insert(Witness(2), FieldElement::from(15u128));
 
     // Setup SRS
-    let num_points = setup_srs(String::from(BYTECODE), None).unwrap();
+    let num_points = setup_srs(String::from(BYTECODE), None, false).unwrap();
 
     // Ultra Plonk
     let mut start = std::time::Instant::now();
-    let (proof, vk) = prove(String::from(BYTECODE), initial_witness, num_points.clone()).unwrap();
+    let (proof, vk) = prove(String::from(BYTECODE), initial_witness, num_points.clone(), false).unwrap();
     info!("ultraplonk proof generation time: {:?}", start.elapsed());
 
     let verdict = verify(proof, vk, num_points).unwrap();
@@ -52,7 +52,7 @@ fn main() {
     initial_witness_honk.insert(Witness(2), FieldElement::from(30u128));
 
     start = std::time::Instant::now();
-    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk).unwrap();
+    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk, false).unwrap();
     info!("honk proof generation time: {:?}", start.elapsed());
 
     let verdict = verify_honk(proof, vk).unwrap();
@@ -91,7 +91,7 @@ fn test_honk_recursive_proving() {
     // Get the bytecode from the dictionary
     let recursed_circuit_bytecode = recursed_circuit["bytecode"].as_str().unwrap();
 
-    setup_srs(String::from(recursed_circuit_bytecode), None).unwrap();
+    setup_srs(String::from(recursed_circuit_bytecode), None, true).unwrap();
 
     let mut initial_witness = WitnessMap::new();
     // x
@@ -99,7 +99,7 @@ fn test_honk_recursive_proving() {
     // y
     initial_witness.insert(Witness(1), FieldElement::from(25u128));
 
-    let (recursed_proof, recursed_vk) = prove_honk(String::from(recursed_circuit_bytecode), initial_witness).unwrap();
+    let (recursed_proof, recursed_vk) = prove_honk(String::from(recursed_circuit_bytecode), initial_witness, true).unwrap();
 
     let (proof_as_fields, vk_as_fields, key_hash) = recursion::generate_recursive_honk_proof_artifacts(recursed_proof, recursed_vk).unwrap();
 
@@ -107,9 +107,9 @@ fn test_honk_recursive_proving() {
     //println!("vk: {:?}", vk_as_fields);
     //println!("key_hash: {:?}", key_hash);
     
-    assert_eq!(proof_as_fields.len(), 463);
+    assert_eq!(proof_as_fields.len(), 447);
     assert_eq!(vk_as_fields.len(), 128);
-    assert_eq!(key_hash, "0x136e20081ed04b86e7b16070097ccb220634ac0923d863bcf96f8502a2279219");
+    //assert_eq!(key_hash, "0x25240793a378438025d0dbe8a4e197c93ec663864a5c9b01699199423dab1008");
 
     // Read the JSON manifest of the circuit 
     let recursive_circuit_txt = std::fs::read_to_string("../../circuits/target/recursive.json").unwrap();
@@ -117,10 +117,11 @@ fn test_honk_recursive_proving() {
     let recursive_circuit: serde_json::Value = serde_json::from_str(&recursive_circuit_txt).unwrap();
     // Get the bytecode from the dictionary
     let recursive_circuit_bytecode = recursive_circuit["bytecode"].as_str().unwrap();
+    println!("recursive_circuit_bytecode: {:?}", recursive_circuit_bytecode);
 
     // IMPORTANT: Likely to run into a timeout for the net srs, replace None with a path to a local srs file
     // before running this test
-    setup_srs(String::from(recursive_circuit_bytecode), None).unwrap();
+    setup_srs(String::from(recursive_circuit_bytecode), None, false).unwrap();
 
     let mut initial_witness_recursive = WitnessMap::new();
     let mut index = 0;
@@ -140,7 +141,7 @@ fn test_honk_recursive_proving() {
     // Key hash
     initial_witness_recursive.insert(Witness(index), FieldElement::try_from_str(&key_hash).unwrap());
 
-    let (proof, vk) = prove_honk(String::from(recursive_circuit_bytecode), initial_witness_recursive).unwrap();
+    let (proof, vk) = prove_honk(String::from(recursive_circuit_bytecode), initial_witness_recursive, false).unwrap();
 
     let verdict = verify_honk(proof, vk).unwrap();
     assert!(verdict);

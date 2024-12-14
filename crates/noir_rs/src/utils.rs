@@ -28,12 +28,12 @@ pub fn get_honk_vkey_hash(vk_bytes: Vec<u8>) -> Result<String, String> {
     })
 }
 
-pub fn get_honk_verification_key(circuit_bytecode: String) -> Result<Vec<u8>, String> {
+pub fn get_honk_verification_key(circuit_bytecode: String, recursive: bool) -> Result<Vec<u8>, String> {
     let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)
         .map_err(|e| format!("Failed to decode circuit: {}", e))?;
 
     let result = unsafe {
-        acir_get_honk_verification_key(&acir_buffer_uncompressed)
+        acir_get_honk_verification_key(&acir_buffer_uncompressed, recursive)
     };
     Ok(result)
 }
