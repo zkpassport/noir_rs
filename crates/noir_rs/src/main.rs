@@ -13,6 +13,9 @@ pub mod srs;
 pub mod verify;
 pub mod utils;
 pub mod recursion;
+pub mod execute;
+pub mod witness;
+pub mod circuit;
 use serde_json;
 
 const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7Dsm66mc9x00O717rhG9ico5cgMOfoMxJu4C2pAEsKioqisnslysoaLVkEQ6aMRYxKFc//ZYQr29L10XfhXv4jB52E+OpMAQAA";
@@ -23,17 +26,15 @@ fn main() {
     // Setup SRS
     setup_srs(String::from(BYTECODE), None, false).unwrap();
 
-    // Honk
-    let mut initial_witness = WitnessMap::new();
-    // a
-    initial_witness.insert(Witness(0), FieldElement::from(5u128));
-    // b
-    initial_witness.insert(Witness(1), FieldElement::from(6u128));
-    // res = a * b
-    initial_witness.insert(Witness(2), FieldElement::from(30u128));
+    // Ultra Honk
+
+    // Get the witness map from the vector of field elements
+    // The vector items can be either a FieldElement, an unsigned integer
+    // For hex or decimal strings, use from_vec_str_to_witness_map
+    let mut initial_witness = witness::from_vec_to_witness_map(vec![5 as u128, 6 as u128, 30 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let (proof, vk) = prove_ultra_honk(String::from(BYTECODE), initial_witness, false).unwrap();
+    let (proof, vk) = prove_ultra_honk(BYTECODE, initial_witness, false).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
@@ -80,7 +81,7 @@ fn test_ultra_honk_recursive_proving() {
     // y
     initial_witness.insert(Witness(1), FieldElement::from(25u128));
 
-    let (recursed_proof, recursed_vk) = prove_ultra_honk(String::from(recursed_circuit_bytecode), initial_witness, true).unwrap();
+    let (recursed_proof, recursed_vk) = prove_ultra_honk(recursed_circuit_bytecode, initial_witness, true).unwrap();
 
     let (proof_as_fields, vk_as_fields, key_hash) = recursion::generate_recursive_honk_proof_artifacts(recursed_proof, recursed_vk).unwrap();
 
@@ -122,7 +123,7 @@ fn test_ultra_honk_recursive_proving() {
     // Key hash
     initial_witness_recursive.insert(Witness(index), FieldElement::try_from_str(&key_hash).unwrap());
 
-    let (proof, vk) = prove_ultra_honk(String::from(recursive_circuit_bytecode), initial_witness_recursive, true).unwrap();
+    let (proof, vk) = prove_ultra_honk(recursive_circuit_bytecode, initial_witness_recursive, true).unwrap();
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     assert!(verdict);

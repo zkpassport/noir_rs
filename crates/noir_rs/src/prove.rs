@@ -6,41 +6,30 @@ use base64::{engine::general_purpose, Engine};
 use bb_rs::barretenberg_api::{acir::{
         acir_create_proof, acir_get_honk_verification_key, acir_get_verification_key, acir_prove_ultra_honk, delete_acir_composer, new_acir_composer, CircuitSizes
 }, Buffer};
-use bn254_blackbox_solver::Bn254BlackBoxSolver;
-use flate2::bufread::GzDecoder;
-use nargo::ops::execute_program;
-use nargo::foreign_calls::DefaultForeignCallExecutor;
 
-fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElement>) -> Result<(Vec<u8>, Vec<u8>), String> {
-    let acir_buffer = general_purpose::STANDARD
-        .decode(circuit_bytecode)
-        .map_err(|e| e.to_string())?;
-    
-    let program = Program::deserialize_program(&acir_buffer).map_err(|e| e.to_string())?;
+use crate::execute::execute;
+use crate::circuit::get_acir_buffer_uncompressed;
+use crate::witness::serialize_witness;
 
-    let mut decoder = GzDecoder::new(acir_buffer.as_slice());
-    let mut acir_buffer_uncompressed = Vec::<u8>::new();
-    decoder
-        .read_to_end(&mut acir_buffer_uncompressed)
-        .map_err(|e| e.to_string())?;
-    let blackbox_solver = Bn254BlackBoxSolver::default();
-    let mut foreign_call_executor = DefaultForeignCallExecutor::default();
-
-    let solved_witness =
-        execute_program(&program, initial_witness, &blackbox_solver, &mut foreign_call_executor).map_err(|e| e.to_string())?;
-    let witness_stack = WitnessStack::try_from(solved_witness).map_err(|e| e.to_string())?;
-    let serialized_solved_witness =
-        bincode::serialize(&witness_stack).map_err(|e| e.to_string())?;
-
-    Ok((serialized_solved_witness, acir_buffer_uncompressed))
-}
-
+/// Generate an Ultra Honk proof for the given circuit bytecode and initial witness
+/// Will execute the circuit to make sure it is solved
+/// 
+/// # Arguments
+/// 
+/// * circuit_bytecode: The circuit bytecode to prove
+/// * initial_witness: The initial witness to use for the proof
+/// * recursive: Whether the circuit is recursive
+/// 
+/// # Returns
+/// * The proof and the verification key
 pub fn prove_ultra_honk(
-    circuit_bytecode: String,
+    circuit_bytecode: &str,
     initial_witness: WitnessMap<FieldElement>,
     recursive: bool,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
-    let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
+    let witness_stack = execute(circuit_bytecode, initial_witness)?;
+    let serialized_solved_witness = serialize_witness(witness_stack)?;
+    let acir_buffer_uncompressed = get_acir_buffer_uncompressed(circuit_bytecode)?;
 
     Ok(unsafe {
         let result = (
