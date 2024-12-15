@@ -35,32 +35,7 @@ fn solve_circuit(circuit_bytecode: String, initial_witness: WitnessMap<FieldElem
     Ok((serialized_solved_witness, acir_buffer_uncompressed))
 }
 
-pub fn prove(
-    circuit_bytecode: String,
-    initial_witness: WitnessMap<FieldElement>,
-    num_points: u32,
-    recursive: bool,
-) -> Result<(Vec<u8>, Vec<u8>), String> {
-    let (serialized_solved_witness, acir_buffer_uncompressed) = solve_circuit(circuit_bytecode, initial_witness)?;
-
-    Ok(unsafe {
-        let mut acir_ptr = new_acir_composer(num_points - 1);
-        let result = (
-            acir_create_proof(
-                &mut acir_ptr,
-                &acir_buffer_uncompressed,
-                &serialized_solved_witness,
-                recursive,
-            ),
-            acir_get_verification_key(&mut acir_ptr),
-        );
-        delete_acir_composer(acir_ptr);
-        result
-    })
-}
-
-
-pub fn prove_honk(
+pub fn prove_ultra_honk(
     circuit_bytecode: String,
     initial_witness: WitnessMap<FieldElement>,
     recursive: bool,

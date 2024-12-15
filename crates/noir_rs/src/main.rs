@@ -6,10 +6,8 @@ use acir::{
 };
 use base64::write::StrConsumer;
 use bb_rs::barretenberg_api::{acir::get_circuit_sizes, common::example_simple_create_and_verify_proof, srs::init_srs};
-use noir_rs::{prove::prove_honk, srs::setup_srs, utils::decode_circuit, verify::verify_honk};
-use prove::prove;
+use noir_rs::{prove::prove_ultra_honk, srs::setup_srs, utils::decode_circuit, verify::verify_ultra_honk};
 use tracing::info;
-use verify::verify;
 pub mod prove;
 pub mod srs;
 pub mod verify;
@@ -22,40 +20,23 @@ const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7D
 fn main() {
     tracing_subscriber::fmt::init();
 
-    // Witness for a circuit with two inputs a and b and public input res = a * b
-    let mut initial_witness = WitnessMap::new();
-    // a
-    initial_witness.insert(Witness(0), FieldElement::from(3u128));
-    // b
-    initial_witness.insert(Witness(1), FieldElement::from(5u128));
-    // res = a * b
-    initial_witness.insert(Witness(2), FieldElement::from(15u128));
-
     // Setup SRS
-    let num_points = setup_srs(String::from(BYTECODE), None, false).unwrap();
-
-    // Ultra Plonk
-    let mut start = std::time::Instant::now();
-    let (proof, vk) = prove(String::from(BYTECODE), initial_witness, num_points.clone(), false).unwrap();
-    info!("ultraplonk proof generation time: {:?}", start.elapsed());
-
-    let verdict = verify(proof, vk, num_points).unwrap();
-    info!("ultraplonk proof verification verdict: {}", verdict);
+    setup_srs(String::from(BYTECODE), None, false).unwrap();
 
     // Honk
-    let mut initial_witness_honk = WitnessMap::new();
+    let mut initial_witness = WitnessMap::new();
     // a
-    initial_witness_honk.insert(Witness(0), FieldElement::from(5u128));
+    initial_witness.insert(Witness(0), FieldElement::from(5u128));
     // b
-    initial_witness_honk.insert(Witness(1), FieldElement::from(6u128));
+    initial_witness.insert(Witness(1), FieldElement::from(6u128));
     // res = a * b
-    initial_witness_honk.insert(Witness(2), FieldElement::from(30u128));
+    initial_witness.insert(Witness(2), FieldElement::from(30u128));
 
-    start = std::time::Instant::now();
-    let (proof, vk) = prove_honk(String::from(BYTECODE), initial_witness_honk, false).unwrap();
-    info!("honk proof generation time: {:?}", start.elapsed());
+    let start = std::time::Instant::now();
+    let (proof, vk) = prove_ultra_honk(String::from(BYTECODE), initial_witness, false).unwrap();
+    info!("ultra honk proof generation time: {:?}", start.elapsed());
 
-    let verdict = verify_honk(proof, vk).unwrap();
+    let verdict = verify_ultra_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 
@@ -83,7 +64,7 @@ fn test_acir_get_circuit_size() {
 
 
 #[test]
-fn test_honk_recursive_proving() {
+fn test_ultra_honk_recursive_proving() {
     // Read the JSON manifest of the circuit 
     let recursed_circuit_txt = std::fs::read_to_string("../../circuits/target/recursed.json").unwrap();
     // Parse the JSON manifest into a dictionary
@@ -99,7 +80,7 @@ fn test_honk_recursive_proving() {
     // y
     initial_witness.insert(Witness(1), FieldElement::from(25u128));
 
-    let (recursed_proof, recursed_vk) = prove_honk(String::from(recursed_circuit_bytecode), initial_witness, true).unwrap();
+    let (recursed_proof, recursed_vk) = prove_ultra_honk(String::from(recursed_circuit_bytecode), initial_witness, true).unwrap();
 
     let (proof_as_fields, vk_as_fields, key_hash) = recursion::generate_recursive_honk_proof_artifacts(recursed_proof, recursed_vk).unwrap();
 
@@ -107,7 +88,7 @@ fn test_honk_recursive_proving() {
     //println!("vk: {:?}", vk_as_fields);
     //println!("key_hash: {:?}", key_hash);
     
-    assert_eq!(proof_as_fields.len(), 447);
+    assert_eq!(proof_as_fields.len(), 463);
     assert_eq!(vk_as_fields.len(), 128);
     //assert_eq!(key_hash, "0x25240793a378438025d0dbe8a4e197c93ec663864a5c9b01699199423dab1008");
 
@@ -121,7 +102,7 @@ fn test_honk_recursive_proving() {
 
     // IMPORTANT: Likely to run into a timeout for the net srs, replace None with a path to a local srs file
     // before running this test
-    setup_srs(String::from(recursive_circuit_bytecode), None, false).unwrap();
+    setup_srs(String::from(recursive_circuit_bytecode), None, true).unwrap();
 
     let mut initial_witness_recursive = WitnessMap::new();
     let mut index = 0;
@@ -141,8 +122,8 @@ fn test_honk_recursive_proving() {
     // Key hash
     initial_witness_recursive.insert(Witness(index), FieldElement::try_from_str(&key_hash).unwrap());
 
-    let (proof, vk) = prove_honk(String::from(recursive_circuit_bytecode), initial_witness_recursive, false).unwrap();
+    let (proof, vk) = prove_ultra_honk(String::from(recursive_circuit_bytecode), initial_witness_recursive, true).unwrap();
 
-    let verdict = verify_honk(proof, vk).unwrap();
+    let verdict = verify_ultra_honk(proof, vk).unwrap();
     assert!(verdict);
 }
