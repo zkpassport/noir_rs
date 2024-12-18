@@ -1,11 +1,5 @@
-use core::num;
-use std::io::Read;
-
-use acir::{circuit::Program, native_types::{WitnessMap, WitnessStack}, FieldElement};
-use base64::{engine::general_purpose, Engine};
-use bb_rs::barretenberg_api::{acir::{
-        acir_create_proof, acir_get_honk_verification_key, acir_get_verification_key, acir_prove_ultra_honk, delete_acir_composer, new_acir_composer, CircuitSizes
-}, Buffer};
+use acir::{native_types::WitnessMap, FieldElement};
+use bb_rs::barretenberg_api::acir::{ acir_get_honk_verification_key, acir_prove_ultra_honk};
 
 use crate::execute::execute;
 use crate::circuit::get_acir_buffer_uncompressed;

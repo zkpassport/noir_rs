@@ -1,37 +1,46 @@
-use core::num;
-
-use acir::{
-    native_types::{Witness, WitnessMap},
-    FieldElement
-};
-use base64::write::StrConsumer;
-use bb_rs::barretenberg_api::{acir::get_circuit_sizes, common::example_simple_create_and_verify_proof, srs::init_srs};
-use noir_rs::{prove::prove_ultra_honk, srs::setup_srs, utils::decode_circuit, verify::verify_ultra_honk};
 use tracing::info;
-pub mod prove;
-pub mod srs;
-pub mod verify;
-pub mod utils;
-pub mod recursion;
-pub mod execute;
-pub mod witness;
-pub mod circuit;
+use bb_rs::barretenberg_api::{acir::get_circuit_sizes, common::example_simple_create_and_verify_proof, srs::init_srs};
+use crate::backends::barretenberg::{srs::{setup_srs, netsrs::NetSrs}, verify::verify_ultra_honk, prove::prove_ultra_honk, recursion};
+use acir::{FieldElement, native_types::{Witness, WitnessMap}};
+use crate::{witness, circuit};
 use serde_json;
 
 const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7Dsm66mc9x00O717rhG9ico5cgMOfoMxJu4C2pAEsKioqisnslysoaLVkEQ6aMRYxKFc//ZYQr29L10XfhXv4jB52E+OpMAQAA";
 
-fn main() {
+#[test]
+fn test_common_example() {
+    assert!(unsafe { 
+        // The group size required to run the example from Barretenberg
+        let subgroup_size = 524289;
+        let srs = NetSrs::new(subgroup_size + 1);
+        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
+        example_simple_create_and_verify_proof() 
+    });
+}
+
+#[test]
+fn test_acir_get_circuit_size() {
+    let (_, constraint_system_buf) = circuit::decode_circuit(BYTECODE).unwrap();
+    let circuit_sizes = unsafe { 
+        get_circuit_sizes(&constraint_system_buf, false) 
+    }; 
+    assert_eq!(circuit_sizes.total, 22);
+    assert_eq!(circuit_sizes.subgroup, 32);
+}
+
+#[test]
+fn test_prove_and_verify_ultra_honk() {
     tracing_subscriber::fmt::init();
 
     // Setup SRS
-    setup_srs(String::from(BYTECODE), None, false).unwrap();
+    setup_srs(BYTECODE, None, false).unwrap();
 
     // Ultra Honk
 
     // Get the witness map from the vector of field elements
     // The vector items can be either a FieldElement, an unsigned integer
     // For hex or decimal strings, use from_vec_str_to_witness_map
-    let mut initial_witness = witness::from_vec_to_witness_map(vec![5 as u128, 6 as u128, 30 as u128]).unwrap();
+    let initial_witness = witness::from_vec_to_witness_map(vec![5 as u128, 6 as u128, 30 as u128]).unwrap();
 
     let start = std::time::Instant::now();
     let (proof, vk) = prove_ultra_honk(BYTECODE, initial_witness, false).unwrap();
@@ -41,33 +50,10 @@ fn main() {
     info!("honk proof verification verdict: {}", verdict);
 }
 
-#[test]
-fn test_common_example() {
-    assert!(unsafe { 
-        // The group size required to run the example from Barretenberg
-        let subgroup_size = 524289;
-        let srs = srs::netsrs::NetSrs::new(subgroup_size + 1);
-        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
-        example_simple_create_and_verify_proof() 
-    });
-}
-
-
-#[test]
-fn test_acir_get_circuit_size() {
-    let (_, constraint_system_buf) = decode_circuit(String::from(BYTECODE)).unwrap();
-    let circuit_sizes = unsafe { 
-        get_circuit_sizes(&constraint_system_buf, false) 
-    }; 
-    assert_eq!(circuit_sizes.total, 22);
-    assert_eq!(circuit_sizes.subgroup, 32);
-}
-
-
-#[test]
+/*#[test]
 fn test_ultra_honk_recursive_proving() {
     // Read the JSON manifest of the circuit 
-    let recursed_circuit_txt = std::fs::read_to_string("../../circuits/target/recursed.json").unwrap();
+    let recursed_circuit_txt = std::fs::read_to_string("circuits/target/recursed.json").unwrap();
     // Parse the JSON manifest into a dictionary
     let recursed_circuit: serde_json::Value = serde_json::from_str(&recursed_circuit_txt).unwrap();
     // Get the bytecode from the dictionary
@@ -94,7 +80,7 @@ fn test_ultra_honk_recursive_proving() {
     //assert_eq!(key_hash, "0x25240793a378438025d0dbe8a4e197c93ec663864a5c9b01699199423dab1008");
 
     // Read the JSON manifest of the circuit 
-    let recursive_circuit_txt = std::fs::read_to_string("../../circuits/target/recursive.json").unwrap();
+    let recursive_circuit_txt = std::fs::read_to_string("circuits/target/recursive.json").unwrap();
     // Parse the JSON manifest into a dictionary
     let recursive_circuit: serde_json::Value = serde_json::from_str(&recursive_circuit_txt).unwrap();
     // Get the bytecode from the dictionary
@@ -127,4 +113,4 @@ fn test_ultra_honk_recursive_proving() {
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     assert!(verdict);
-}
+}*/

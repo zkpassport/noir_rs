@@ -1,15 +1,8 @@
-use core::num;
 use std::io::Read;
 
-use acir::{circuit::Program, native_types::{WitnessMap, WitnessStack}, FieldElement};
-use base64::{engine::general_purpose, Engine};
-use bb_rs::barretenberg_api::{acir::{
-        acir_create_proof, acir_get_honk_verification_key, acir_get_verification_key, acir_prove_ultra_honk, delete_acir_composer, new_acir_composer, CircuitSizes
-}, Buffer};
-use bn254_blackbox_solver::Bn254BlackBoxSolver;
+use acir::{circuit::Program, FieldElement};
+use base64::engine::{general_purpose, Engine};
 use flate2::bufread::GzDecoder;
-use nargo::ops::execute_program;
-use nargo::foreign_calls::DefaultForeignCallExecutor;
 
 /// Get the acir buffer (compressed) from the circuit bytecode
 /// 
@@ -59,6 +52,22 @@ pub fn uncompress_acir_buffer(acir_buffer: Vec<u8>) -> Result<Vec<u8>, String> {
 pub fn get_acir_buffer_uncompressed(circuit_bytecode: &str) -> Result<Vec<u8>, String> {
     let acir_buffer = get_acir_buffer(circuit_bytecode)?;
     uncompress_acir_buffer(acir_buffer)
+}
+
+/// Decode the circuit bytecode into an acir buffer
+/// 
+/// # Arguments
+/// 
+/// * circuit_bytecode: The circuit bytecode to decode
+/// 
+/// # Returns
+/// 
+/// The acir buffer and the uncompressed acir buffer
+pub fn decode_circuit(circuit_bytecode: &str) -> Result<(Vec<u8>, Vec<u8>), String> {
+    let acir_buffer = get_acir_buffer(circuit_bytecode)?;
+    let acir_buffer_uncompressed = get_acir_buffer_uncompressed(circuit_bytecode)?;
+
+    Ok((acir_buffer, acir_buffer_uncompressed))
 }
 
 /// Get the program from the circuit bytecode

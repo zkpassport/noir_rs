@@ -1,6 +1,3 @@
-use core::num;
-use std::io::Read;
-use acir::{circuit::Program, native_types::{WitnessMap, WitnessStack}, FieldElement};
 use bb_rs::barretenberg_api::acir::{
         acir_vk_as_fields_ultra_honk, acir_proof_as_fields_ultra_honk
 };

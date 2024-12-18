@@ -1,4 +1,4 @@
-use crate::srs::G2;
+use crate::barretenberg::srs::G2;
 
 use super::Srs;
 use std::fs;
