@@ -50,6 +50,36 @@ fn test_prove_and_verify_ultra_honk() {
     info!("honk proof verification verdict: {}", verdict);
 }
 
+// The bytecode fails to be interpreted correctly by Barretenberg
+#[test]
+fn test_ultra_honk_keccak() {
+    tracing_subscriber::fmt::init();
+
+    // Read the JSON manifest of the circuit 
+    let keccak_circuit_txt = std::fs::read_to_string("circuits/target/keccak.json").unwrap();
+    // Parse the JSON manifest into a dictionary
+    let keccak_circuit: serde_json::Value = serde_json::from_str(&keccak_circuit_txt).unwrap();
+    // Get the bytecode from the dictionary
+    let keccak_circuit_bytecode = keccak_circuit["bytecode"].as_str().unwrap();
+    
+    // Setup SRS
+    setup_srs(keccak_circuit_bytecode, None, false).unwrap();
+
+    // Ultra Honk
+
+    // Get the witness map from the vector of field elements
+    // The vector items can be either a FieldElement, an unsigned integer
+    // For hex or decimal strings, use from_vec_str_to_witness_map
+    let initial_witness = witness::from_vec_to_witness_map(vec![2 as u128, 5 as u128, 10 as u128, 15 as u128, 20 as u128]).unwrap();
+
+    let start = std::time::Instant::now();
+    let (proof, vk) = prove_ultra_honk(keccak_circuit_bytecode, initial_witness, false).unwrap();
+    info!("ultra honk proof generation time: {:?}", start.elapsed());
+
+    let verdict = verify_ultra_honk(proof, vk).unwrap();
+    info!("honk proof verification verdict: {}", verdict);
+}
+
 /*#[test]
 fn test_ultra_honk_recursive_proving() {
     // Read the JSON manifest of the circuit 

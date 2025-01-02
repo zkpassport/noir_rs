@@ -2,5 +2,6 @@
 members = [
     "crates/recursed", 
     "crates/recursive",
-    "crates/product"
+    "crates/product",
+    "crates/keccak"
 ]
