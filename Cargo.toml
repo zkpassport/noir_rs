@@ -25,7 +25,10 @@ serde_json = "1.0.125"
 
 # Optional dependencies
 bb_rs = { git = "https://github.com/zkpassport/aztec-packages.git", branch = "v0.67.0", optional = true }
+openssl = { version = "0.10", features = ["vendored"], optional = true }
 
 [features]
 default = []
 barretenberg = ["bb_rs"]
+android-compat = ["openssl"]
+
