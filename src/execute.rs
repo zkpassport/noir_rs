@@ -1,7 +1,7 @@
 use acir::{native_types::{WitnessMap, WitnessStack}, FieldElement};
 use bn254_blackbox_solver::Bn254BlackBoxSolver;
 use nargo::ops::execute_program;
-use nargo::foreign_calls::DefaultForeignCallExecutor;
+use nargo::foreign_calls::default::DefaultForeignCallBuilder;
 
 use crate::circuit::get_program;
 
@@ -19,7 +19,7 @@ pub fn execute(circuit_bytecode: &str, initial_witness: WitnessMap<FieldElement>
     let program = get_program(circuit_bytecode)?;
 
     let blackbox_solver = Bn254BlackBoxSolver::default();
-    let mut foreign_call_executor = DefaultForeignCallExecutor::default();
+    let mut foreign_call_executor = DefaultForeignCallBuilder::default().build();
 
     let solved_witness =
         execute_program(&program, initial_witness, &blackbox_solver, &mut foreign_call_executor).map_err(|e| e.to_string())?;
