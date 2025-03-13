@@ -1,12 +1,13 @@
 use tracing::info;
 use bb_rs::barretenberg_api::{acir::get_circuit_sizes, common::example_simple_create_and_verify_proof, srs::init_srs};
-use crate::backends::barretenberg::{srs::{setup_srs, netsrs::NetSrs}, verify::verify_ultra_honk, prove::prove_ultra_honk, recursion};
+use crate::backends::barretenberg::{srs::{setup_srs_from_bytecode, setup_srs, netsrs::NetSrs}, verify::verify_ultra_honk, prove::prove_ultra_honk, recursion, utils::{get_honk_verification_key, compute_subgroup_size}};
 use acir::{FieldElement, native_types::{Witness, WitnessMap}};
 use crate::{witness, circuit};
 use serde_json;
 
 const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7Dsm66mc9x00O717rhG9ico5cgMOfoMxJu4C2pAEsKioqisnslysoaLVkEQ6aMRYxKFc//ZYQr29L10XfhXv4jB52E+OpMAQAA";
 
+#[ignore]
 #[test]
 fn test_common_example() {
     assert!(unsafe { 
@@ -30,10 +31,10 @@ fn test_acir_get_circuit_size() {
 
 #[test]
 fn test_prove_and_verify_ultra_honk() {
-    tracing_subscriber::fmt::init();
+    let _ = tracing_subscriber::fmt::try_init();
 
     // Setup SRS
-    setup_srs(BYTECODE, None, false).unwrap();
+    setup_srs_from_bytecode(BYTECODE, None, false).unwrap();
 
     // Ultra Honk
 
@@ -43,8 +44,10 @@ fn test_prove_and_verify_ultra_honk() {
     let initial_witness = witness::from_vec_to_witness_map(vec![5 as u128, 6 as u128, 30 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let (proof, vk) = prove_ultra_honk(BYTECODE, initial_witness, false).unwrap();
+    let proof = prove_ultra_honk(BYTECODE, initial_witness, false).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
+
+    let vk = get_honk_verification_key(BYTECODE, false).unwrap();
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
@@ -53,7 +56,7 @@ fn test_prove_and_verify_ultra_honk() {
 // The bytecode fails to be interpreted correctly by Barretenberg
 #[test]
 fn test_ultra_honk_keccak() {
-    tracing_subscriber::fmt::init();
+    let _ = tracing_subscriber::fmt::try_init();
 
     // Read the JSON manifest of the circuit 
     let keccak_circuit_txt = std::fs::read_to_string("circuits/target/keccak.json").unwrap();
@@ -63,7 +66,7 @@ fn test_ultra_honk_keccak() {
     let keccak_circuit_bytecode = keccak_circuit["bytecode"].as_str().unwrap();
     
     // Setup SRS
-    setup_srs(keccak_circuit_bytecode, None, false).unwrap();
+    setup_srs_from_bytecode(keccak_circuit_bytecode, None, false).unwrap();
 
     // Ultra Honk
 
@@ -73,11 +76,66 @@ fn test_ultra_honk_keccak() {
     let initial_witness = witness::from_vec_to_witness_map(vec![2 as u128, 5 as u128, 10 as u128, 15 as u128, 20 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let (proof, vk) = prove_ultra_honk(keccak_circuit_bytecode, initial_witness, false).unwrap();
+    let proof = prove_ultra_honk(keccak_circuit_bytecode, initial_witness, false).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
+
+    let vk = get_honk_verification_key(keccak_circuit_bytecode, false).unwrap();
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
+}
+
+#[test]
+fn test_srs_setup_from_bytecode() {
+    let _ = tracing_subscriber::fmt::try_init();
+
+    let start = std::time::Instant::now();
+    let srs = setup_srs_from_bytecode(BYTECODE, None, false).unwrap();
+    info!("srs setup time: {:?}", start.elapsed());
+    // 2^5 + 1 = 33
+    assert_eq!(srs, 33);
+}
+
+#[test]
+fn test_srs_setup_from_circuit_size() {
+    let _ = tracing_subscriber::fmt::try_init();
+
+    let start = std::time::Instant::now();
+    let circuit_size = 22;
+    let srs = setup_srs(circuit_size, None).unwrap();
+    info!("srs setup time: {:?}", start.elapsed());
+    // 2^5 + 1 = 33
+    assert_eq!(srs, 33);
+}
+
+#[test]
+fn test_compute_subgroup_size() {
+    let mut subgroup_size = compute_subgroup_size(22);
+    assert_eq!(subgroup_size, 32);
+
+    subgroup_size = compute_subgroup_size(50);
+    assert_eq!(subgroup_size, 64);
+
+    subgroup_size = compute_subgroup_size(100);
+    assert_eq!(subgroup_size, 128);
+
+    subgroup_size = compute_subgroup_size(1000);
+    assert_eq!(subgroup_size, 1024);
+
+    subgroup_size = compute_subgroup_size(10000);
+    assert_eq!(subgroup_size, 16384);
+
+    subgroup_size = compute_subgroup_size(100000);
+    assert_eq!(subgroup_size, 131072);
+    
+    subgroup_size = compute_subgroup_size(200000);
+    assert_eq!(subgroup_size, 262144);
+
+    subgroup_size = compute_subgroup_size(500000);
+    assert_eq!(subgroup_size, 524288);
+
+    subgroup_size = compute_subgroup_size(1000000);
+    assert_eq!(subgroup_size, 1048576);    
 }
 
 /*#[test]

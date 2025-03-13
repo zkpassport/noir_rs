@@ -21,7 +21,14 @@ pub fn get_honk_verification_key(circuit_bytecode: &str, recursive: bool) -> Res
     Ok(result)
 }
 
-pub fn get_subgroup_size(circuit_bytecode: &str, recursion: bool) -> u32 {
+
+pub fn compute_subgroup_size(circuit_size: u32) -> u32 {
+    let log_value = (circuit_size as f64).log2().ceil() as u32;
+    let subgroup_size = 2u32.pow(log_value);
+    subgroup_size
+}
+
+pub fn get_circuit_size(circuit_bytecode: &str, recursion: bool) -> u32 {
     let (_, acir_buffer_uncompressed) = if let Ok(acir_buffer_uncompressed) = decode_circuit(circuit_bytecode) {
         acir_buffer_uncompressed
     } else {
@@ -29,7 +36,10 @@ pub fn get_subgroup_size(circuit_bytecode: &str, recursion: bool) -> u32 {
     };
 
     let circuit_size = unsafe { get_circuit_sizes(&acir_buffer_uncompressed, recursion) };
-    let log_value = (circuit_size.total as f64).log2().ceil() as u32;
-    let subgroup_size = 2u32.pow(log_value);
-    subgroup_size
+    circuit_size.total
+}
+
+pub fn get_subgroup_size(circuit_bytecode: &str, recursion: bool) -> u32 {
+    let circuit_size = get_circuit_size(circuit_bytecode, recursion);
+    compute_subgroup_size(circuit_size)
 }
