@@ -44,7 +44,7 @@ generate a proof:
 
 ```rust
 use noir_rs::{
-    barretenberg::{prove::prove_ultra_honk, srs::setup_srs, verify::verify_ultra_honk},
+    barretenberg::{prove::prove_ultra_honk, srs::{setup_srs_from_bytecode, setup_srs}, verify::verify_ultra_honk, utils::get_honk_verification_key},
     witness::from_vec_str_to_witness_map,
 }
 
@@ -55,7 +55,10 @@ const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7D
 // Setup the SRS
 // You can provide a path to the SRS transcript file as second argument
 // Otherwise it will be downloaded automatically from Aztec's servers
-setup_srs(BYTECODE, None).unwrap();
+setup_srs_from_bytecode(BYTECODE, None, false).unwrap();
+// Alternatively, if you know the circuit size, you can use the following function
+// Assuming the circuit size is 40 here
+setup_srs(40, None).unwrap();
 
 // Set up your witness
 // a = 5, b = 6, res = a * b = 30
@@ -64,10 +67,13 @@ let initial_witness = from_vec_str_to_witness_map(vec!["5", "6", "0x1e"]).unwrap
 // Start timing the proof generation
 let start = std::time::Instant::now();
 // Generate the proof
-// It returns the proof and the verification key
-let (proof, vk) = prove_ultra_honk(BYTECODE, initial_witness).unwrap();
+// It returns the proof
+let proof = prove_ultra_honk(BYTECODE, initial_witness).unwrap();
 // Print the time it took to generate the proof
 info!("Proof generation time: {:?}", start.elapsed());
+
+// Get the verification key
+let vk = get_honk_verification_key(BYTECODE).unwrap();
 
 // Verify the proof
 let verdict = verify_ultra_honk(proof, vk).unwrap();
