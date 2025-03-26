@@ -4,13 +4,6 @@ use bb_rs::barretenberg_api::acir::{
 
 use crate::circuit::decode_circuit;
 
-pub fn get_honk_vkey_hash(vk_bytes: Vec<u8>) -> Result<String, String> {
-    Ok(unsafe {
-        let (_, key_hash) = acir_vk_as_fields_ultra_honk(&vk_bytes);
-        key_hash
-    })
-}
-
 pub fn get_honk_verification_key(circuit_bytecode: &str, recursive: bool) -> Result<Vec<u8>, String> {
     let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)
         .map_err(|e| format!("Failed to decode circuit: {}", e))?;
