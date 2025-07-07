@@ -1,5 +1,5 @@
 use acir::{native_types::WitnessMap, FieldElement};
-use bb_rs::barretenberg_api::acir::{ acir_get_honk_verification_key, acir_prove_ultra_honk};
+use bb_rs::barretenberg_api::acir::{ acir_get_honk_verification_key, acir_prove_ultra_honk, acir_prove_ultra_keccak_honk, acir_prove_ultra_keccak_zk_honk};
 
 use crate::execute::execute;
 use crate::circuit::get_acir_buffer_uncompressed;
@@ -12,20 +12,55 @@ use crate::witness::serialize_witness;
 /// 
 /// * circuit_bytecode: The circuit bytecode to prove
 /// * initial_witness: The initial witness to use for the proof
-/// * recursive: Whether the circuit is recursive
+/// * verification_key: The verification key to use for the proof
 /// 
 /// # Returns
 /// * The proof
 pub fn prove_ultra_honk(
     circuit_bytecode: &str,
     initial_witness: WitnessMap<FieldElement>,
-    recursive: bool,
+    verification_key: Vec<u8>,
 ) -> Result<Vec<u8>, String> {
     let witness_stack = execute(circuit_bytecode, initial_witness)?;
     let serialized_solved_witness = serialize_witness(witness_stack)?;
     let acir_buffer_uncompressed = get_acir_buffer_uncompressed(circuit_bytecode)?;
 
     Ok(unsafe {
-        acir_prove_ultra_honk(&acir_buffer_uncompressed, &serialized_solved_witness, recursive)
+        acir_prove_ultra_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
+    })
+}
+
+/// Generate an Ultra Honk proof for the given circuit bytecode and initial witness
+/// Will execute the circuit to make sure it is solved
+/// Unlike the standard Ultra Honk proof, this proof uses the Keccak hash function
+/// instead of Poseidon hash function for the random oracle
+/// 
+/// If zk is true, the proof will be fully zero-knowledge
+/// 
+/// # Arguments
+/// 
+/// * circuit_bytecode: The circuit bytecode to prove
+/// * initial_witness: The initial witness to use for the proof
+/// * verification_key: The verification key to use for the proof
+/// * zk: Whether the proof should be fully zero-knowledge
+/// 
+/// # Returns
+/// * The proof
+pub fn prove_ultra_honk_keccak(
+    circuit_bytecode: &str,
+    initial_witness: WitnessMap<FieldElement>,
+    verification_key: Vec<u8>,
+    zk: bool,
+) -> Result<Vec<u8>, String> {
+    let witness_stack = execute(circuit_bytecode, initial_witness)?;
+    let serialized_solved_witness = serialize_witness(witness_stack)?;
+    let acir_buffer_uncompressed = get_acir_buffer_uncompressed(circuit_bytecode)?;
+
+    Ok(unsafe {
+        if zk {
+            acir_prove_ultra_keccak_zk_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
+        } else {
+            acir_prove_ultra_keccak_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
+        }
     })
 }

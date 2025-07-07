@@ -1,23 +1,11 @@
 use tracing::info;
-use bb_rs::barretenberg_api::{acir::get_circuit_sizes, common::example_simple_create_and_verify_proof, srs::init_srs};
-use crate::backends::barretenberg::{srs::{setup_srs_from_bytecode, setup_srs, netsrs::NetSrs}, verify::verify_ultra_honk, prove::prove_ultra_honk, recursion, utils::{get_honk_verification_key, compute_subgroup_size}};
+use bb_rs::barretenberg_api::{acir::get_circuit_sizes, srs::init_srs};
+use crate::backends::barretenberg::{srs::{setup_srs_from_bytecode, setup_srs, netsrs::NetSrs}, verify::{verify_ultra_honk, verify_ultra_keccak_honk}, prove::{prove_ultra_honk, prove_ultra_honk_keccak}, recursion, utils::{get_honk_verification_key, compute_subgroup_size}};
 use acir::{FieldElement, native_types::{Witness, WitnessMap}};
 use crate::{witness, circuit};
 use serde_json;
 
 const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7Dsm66mc9x00O717rhG9ico5cgMOfoMxJu4C2pAEsKioqisnslysoaLVkEQ6aMRYxKFc//ZYQr29L10XfhXv4jB52E+OpMAQAA";
-
-#[ignore]
-#[test]
-fn test_common_example() {
-    assert!(unsafe { 
-        // The group size required to run the example from Barretenberg
-        let subgroup_size = 524289;
-        let srs = NetSrs::new(subgroup_size + 1);
-        init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
-        example_simple_create_and_verify_proof() 
-    });
-}
 
 #[test]
 fn test_acir_get_circuit_size() {
@@ -25,8 +13,8 @@ fn test_acir_get_circuit_size() {
     let circuit_sizes = unsafe { 
         get_circuit_sizes(&constraint_system_buf, false) 
     }; 
-    assert_eq!(circuit_sizes.total, 22);
-    assert_eq!(circuit_sizes.subgroup, 32);
+    assert_eq!(circuit_sizes.total, 3558);
+    assert_eq!(circuit_sizes.subgroup, 4096);
 }
 
 #[test]
@@ -44,10 +32,9 @@ fn test_prove_and_verify_ultra_honk() {
     let initial_witness = witness::from_vec_to_witness_map(vec![5 as u128, 6 as u128, 30 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let proof = prove_ultra_honk(BYTECODE, initial_witness, false).unwrap();
+    let vk = get_honk_verification_key(BYTECODE).unwrap();
+    let proof = prove_ultra_honk(BYTECODE, initial_witness, vk.clone()).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
-
-    let vk = get_honk_verification_key(BYTECODE, false).unwrap();
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
@@ -76,12 +63,11 @@ fn test_ultra_honk_keccak() {
     let initial_witness = witness::from_vec_to_witness_map(vec![2 as u128, 5 as u128, 10 as u128, 15 as u128, 20 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let proof = prove_ultra_honk(keccak_circuit_bytecode, initial_witness, false).unwrap();
+    let vk = get_honk_verification_key(keccak_circuit_bytecode).unwrap();
+    let proof = prove_ultra_honk_keccak(keccak_circuit_bytecode, initial_witness, vk.clone(), false).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
 
-    let vk = get_honk_verification_key(keccak_circuit_bytecode, false).unwrap();
-
-    let verdict = verify_ultra_honk(proof, vk).unwrap();
+    let verdict = verify_ultra_keccak_honk(proof, vk, false).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 

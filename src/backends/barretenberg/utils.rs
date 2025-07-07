@@ -4,12 +4,12 @@ use bb_rs::barretenberg_api::acir::{
 
 use crate::circuit::decode_circuit;
 
-pub fn get_honk_verification_key(circuit_bytecode: &str, recursive: bool) -> Result<Vec<u8>, String> {
+pub fn get_honk_verification_key(circuit_bytecode: &str) -> Result<Vec<u8>, String> {
     let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)
         .map_err(|e| format!("Failed to decode circuit: {}", e))?;
 
     let result = unsafe {
-        acir_get_honk_verification_key(&acir_buffer_uncompressed, recursive)
+        acir_get_honk_verification_key(&acir_buffer_uncompressed)
     };
     Ok(result)
 }
