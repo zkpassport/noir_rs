@@ -1,5 +1,5 @@
 use acir::{native_types::WitnessMap, FieldElement};
-use bb_rs::barretenberg_api::acir::{ acir_get_honk_verification_key, acir_prove_ultra_honk, acir_prove_ultra_keccak_honk, acir_prove_ultra_keccak_zk_honk};
+use bb_rs::barretenberg_api::acir::{ acir_prove_ultra_honk, acir_prove_ultra_keccak_honk, acir_prove_ultra_keccak_zk_honk};
 
 use crate::execute::execute;
 use crate::circuit::get_acir_buffer_uncompressed;
@@ -42,7 +42,7 @@ pub fn prove_ultra_honk(
 /// * circuit_bytecode: The circuit bytecode to prove
 /// * initial_witness: The initial witness to use for the proof
 /// * verification_key: The verification key to use for the proof
-/// * zk: Whether the proof should be fully zero-knowledge
+/// * disable_zk: Whether to disable the zero-knowledge property of the proof
 /// 
 /// # Returns
 /// * The proof
@@ -50,17 +50,17 @@ pub fn prove_ultra_honk_keccak(
     circuit_bytecode: &str,
     initial_witness: WitnessMap<FieldElement>,
     verification_key: Vec<u8>,
-    zk: bool,
+    disable_zk: bool,
 ) -> Result<Vec<u8>, String> {
     let witness_stack = execute(circuit_bytecode, initial_witness)?;
     let serialized_solved_witness = serialize_witness(witness_stack)?;
     let acir_buffer_uncompressed = get_acir_buffer_uncompressed(circuit_bytecode)?;
 
     Ok(unsafe {
-        if zk {
-            acir_prove_ultra_keccak_zk_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
-        } else {
+        if disable_zk {
             acir_prove_ultra_keccak_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
+        } else {
+            acir_prove_ultra_keccak_zk_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
         }
     })
 }

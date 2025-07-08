@@ -27,20 +27,30 @@ impl NetSrs {
     }
 
     fn download_g1_data(num_points: u32) -> Vec<u8> {
-        const G1_START: u32 = 28;
-        let g1_end: u32 = G1_START + num_points * 64 - 1;
+        let g1_end: u32 = num_points * 64 - 1;
 
         let mut headers = HeaderMap::new();
         headers.insert(
             RANGE,
-            format!("bytes={}-{}", G1_START, g1_end).parse().unwrap(),
+            format!("bytes={}-{}", 0, g1_end).parse().unwrap(),
         );
 
         let response = Client::new()
             .get(
-                "https://aztec-ignition.s3.amazonaws.com/MAIN%20IGNITION/monomial/transcript00.dat",
+                "https://crs.aztec.network/g1.dat",
             )
             .headers(headers)
+            .send()
+            .unwrap();
+
+        response.bytes().unwrap().to_vec()
+    }
+
+    fn download_g2_data() -> Vec<u8> {
+        let response = Client::new()
+            .get(
+                "https://crs.aztec.network/g2.dat",
+            )
             .send()
             .unwrap();
 

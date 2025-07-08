@@ -24,13 +24,11 @@ impl LocalSrs {
      */
     pub fn from_dat_file(num_points: u32, path: Option<&str>) -> Self {
         let file = fs::read(path.unwrap_or(SRS_DEFAULT_PATH)).unwrap();
-
-        const G1_START: u32 = 28;
-        let g1_end: u32 = G1_START + num_points * 64 - 1;
+        let g1_end: u32 = num_points * 64 - 1;
 
         let srs: Srs = Srs {
             num_points: num_points,
-            g1_data: file[G1_START as usize..=g1_end as usize].to_vec(),
+            g1_data: file[0..=g1_end as usize].to_vec(),
             g2_data: G2.to_vec(),
         };
 
