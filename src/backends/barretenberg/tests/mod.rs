@@ -1,5 +1,5 @@
 use tracing::info;
-use bb_rs::barretenberg_api::{acir::get_circuit_sizes, srs::init_srs};
+use bb_rs::barretenberg_api::{acir::{get_circuit_sizes, acir_vk_as_fields_ultra_honk}, srs::init_srs};
 use crate::backends::barretenberg::{srs::{setup_srs_from_bytecode, setup_srs, netsrs::NetSrs}, verify::{verify_ultra_honk, verify_ultra_keccak_honk, get_ultra_honk_verification_key, get_ultra_honk_keccak_verification_key}, prove::{prove_ultra_honk, prove_ultra_honk_keccak}, recursion, utils::compute_subgroup_size};
 use acir::{FieldElement, native_types::{Witness, WitnessMap}};
 use crate::{witness, circuit};
@@ -79,7 +79,7 @@ fn test_srs_setup_from_bytecode() {
     let srs = setup_srs_from_bytecode(BYTECODE, None, false).unwrap();
     info!("srs setup time: {:?}", start.elapsed());
     // 2^5 + 1 = 33
-    assert_eq!(srs, 33);
+    assert_eq!(srs, 4097);
 }
 
 #[test]
