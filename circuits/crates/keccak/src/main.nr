@@ -1,5 +1,7 @@
+use keccak256::keccak256;
+
 fn main(msg: [u8; 5]) {
-    std::hash::keccak256(msg, 5);
+    keccak256(msg, 5);
 }
 
 #[test]
