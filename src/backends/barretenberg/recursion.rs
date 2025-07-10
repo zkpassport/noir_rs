@@ -2,7 +2,7 @@ use bb_rs::barretenberg_api::acir::{
         acir_vk_as_fields_ultra_honk, acir_proof_as_fields_ultra_honk
 };
 
-pub fn generate_recursive_honk_proof_artifacts(    
+/*pub fn generate_recursive_honk_proof_artifacts(    
     proof_bytes: Vec<u8>,
     vk_bytes: Vec<u8>
 ) -> Result<(Vec<String>, Vec<String>), String> {
@@ -19,4 +19,4 @@ pub fn generate_recursive_honk_proof_artifacts(
 
         (proof_without_public_inputs, vk)
     })
-}
+}*/

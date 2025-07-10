@@ -1,6 +1,6 @@
 pub mod prove;
 pub mod verify;
-pub mod recursion;
+//pub mod recursion;
 pub mod utils;
 pub mod srs;
 
