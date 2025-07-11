@@ -40,7 +40,7 @@ pub fn get_ultra_honk_keccak_verification_key(circuit_bytecode: &str, disable_zk
     Ok(result)
 }
 
-pub fn verify_ultra_keccak_honk(
+pub fn verify_ultra_honk_keccak(
     proof: Vec<u8>,
     verification_key: Vec<u8>,
     disable_zk: bool,
