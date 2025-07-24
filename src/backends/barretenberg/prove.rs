@@ -20,13 +20,14 @@ pub fn prove_ultra_honk(
     circuit_bytecode: &str,
     initial_witness: WitnessMap<FieldElement>,
     verification_key: Vec<u8>,
+    low_memory_mode: bool,
 ) -> Result<Vec<u8>, String> {
     let witness_stack = execute(circuit_bytecode, initial_witness)?;
     let serialized_solved_witness = serialize_witness(witness_stack)?;
     let acir_buffer_uncompressed = get_acir_buffer_uncompressed(circuit_bytecode)?;
 
     Ok(unsafe {
-        acir_prove_ultra_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
+        acir_prove_ultra_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key, low_memory_mode)
     })
 }
 
@@ -51,6 +52,7 @@ pub fn prove_ultra_honk_keccak(
     initial_witness: WitnessMap<FieldElement>,
     verification_key: Vec<u8>,
     disable_zk: bool,
+    low_memory_mode: bool,
 ) -> Result<Vec<u8>, String> {
     let witness_stack = execute(circuit_bytecode, initial_witness)?;
     let serialized_solved_witness = serialize_witness(witness_stack)?;
@@ -58,9 +60,9 @@ pub fn prove_ultra_honk_keccak(
 
     Ok(unsafe {
         if disable_zk {
-            acir_prove_ultra_keccak_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
+            acir_prove_ultra_keccak_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key, low_memory_mode)
         } else {
-            acir_prove_ultra_keccak_zk_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key)
+            acir_prove_ultra_keccak_zk_honk(&acir_buffer_uncompressed, &serialized_solved_witness, &verification_key, low_memory_mode)
         }
     })
 }

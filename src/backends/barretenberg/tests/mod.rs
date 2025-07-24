@@ -1,5 +1,5 @@
 use tracing::info;
-use bb_rs::barretenberg_api::{acir::get_circuit_sizes, srs::init_srs};
+use bb_rs::barretenberg_api::{acir::{get_circuit_sizes, acir_get_slow_low_memory}, srs::init_srs};
 use crate::backends::barretenberg::{srs::{setup_srs_from_bytecode, setup_srs, netsrs::NetSrs}, verify::{verify_ultra_honk, verify_ultra_honk_keccak, get_ultra_honk_verification_key, get_ultra_honk_keccak_verification_key}, prove::{prove_ultra_honk, prove_ultra_honk_keccak}, utils::compute_subgroup_size};
 use acir::{FieldElement, native_types::{Witness, WitnessMap}};
 use crate::{witness, circuit};
@@ -32,15 +32,17 @@ fn test_prove_and_verify_ultra_honk() {
     let initial_witness = witness::from_vec_to_witness_map(vec![5 as u128, 6 as u128, 30 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let vk = get_ultra_honk_verification_key(BYTECODE).unwrap();
-    let proof = prove_ultra_honk(BYTECODE, initial_witness, vk.clone()).unwrap();
+    let vk = get_ultra_honk_verification_key(BYTECODE, false).unwrap();
+    assert_eq!(acir_get_slow_low_memory(), false);
+
+    let proof = prove_ultra_honk(BYTECODE, initial_witness, vk.clone(), false).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
+    assert_eq!(acir_get_slow_low_memory(), false);
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 
-// The bytecode fails to be interpreted correctly by Barretenberg
 #[test]
 fn test_ultra_honk_keccak() {
     let _ = tracing_subscriber::fmt::try_init();
@@ -63,11 +65,47 @@ fn test_ultra_honk_keccak() {
     let initial_witness = witness::from_vec_to_witness_map(vec![2 as u128, 5 as u128, 10 as u128, 15 as u128, 20 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let vk = get_ultra_honk_keccak_verification_key(keccak_circuit_bytecode, false).unwrap();
-    let proof = prove_ultra_honk_keccak(keccak_circuit_bytecode, initial_witness, vk.clone(), false).unwrap();
+    let vk = get_ultra_honk_keccak_verification_key(keccak_circuit_bytecode, false, false).unwrap();
+    assert_eq!(acir_get_slow_low_memory(), false);
+    
+    let proof = prove_ultra_honk_keccak(keccak_circuit_bytecode, initial_witness, vk.clone(), false, false).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
+    assert_eq!(acir_get_slow_low_memory(), false);
 
     let verdict = verify_ultra_honk_keccak(proof, vk, false).unwrap();
+    info!("honk proof verification verdict: {}", verdict);
+}
+
+#[test]
+fn test_ultra_honk_low_memory() {
+    let _ = tracing_subscriber::fmt::try_init();
+
+    // Read the JSON manifest of the circuit 
+    let circuit_txt = std::fs::read_to_string("circuits/target/keccak_large.json").unwrap();
+    // Parse the JSON manifest into a dictionary
+    let circuit: serde_json::Value = serde_json::from_str(&circuit_txt).unwrap();
+    // Get the bytecode from the dictionary
+    let circuit_bytecode = circuit["bytecode"].as_str().unwrap();
+    
+    // Setup SRS
+    setup_srs_from_bytecode(circuit_bytecode, None, false).unwrap();
+
+    // Ultra Honk
+
+    // Get the witness map from the vector of field elements
+    // The vector items can be either a FieldElement, an unsigned integer
+    // For hex or decimal strings, use from_vec_str_to_witness_map
+    let initial_witness = witness::from_vec_to_witness_map(vec![2 as u128, 5 as u128, 10 as u128, 15 as u128, 20 as u128]).unwrap();
+
+    let start = std::time::Instant::now();
+    let vk = get_ultra_honk_verification_key(circuit_bytecode, true).unwrap();
+    assert_eq!(acir_get_slow_low_memory(), true);
+    
+    let proof = prove_ultra_honk(circuit_bytecode, initial_witness, vk.clone(), true).unwrap();
+    info!("ultra honk proof generation time: {:?}", start.elapsed());
+    assert_eq!(acir_get_slow_low_memory(), true);
+
+    let verdict = verify_ultra_honk(proof, vk).unwrap();
     info!("honk proof verification verdict: {}", verdict);
 }
 
