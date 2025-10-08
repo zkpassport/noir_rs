@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use acir::{circuit::Program, FieldElement};
+use acvm::acir::{circuit::Program, FieldElement};
 use base64::engine::{general_purpose, Engine};
 use flate2::bufread::GzDecoder;
 

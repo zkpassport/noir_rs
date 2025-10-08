@@ -1,11 +1,11 @@
 use tracing::info;
 use bb_rs::barretenberg_api::{acir::{get_circuit_sizes, acir_get_slow_low_memory}, srs::init_srs};
 use crate::backends::barretenberg::{srs::{setup_srs_from_bytecode, setup_srs, netsrs::NetSrs}, verify::{verify_ultra_honk, verify_ultra_honk_keccak, get_ultra_honk_verification_key, get_ultra_honk_keccak_verification_key}, prove::{prove_ultra_honk, prove_ultra_honk_keccak}, utils::compute_subgroup_size};
-use acir::{FieldElement, native_types::{Witness, WitnessMap}};
+use acvm::acir::{FieldElement, native_types::{Witness, WitnessMap}};
 use crate::{witness, circuit};
 use serde_json;
 
-const BYTECODE: &str = "H4sIAAAAAAAA/62QQQqAMAwErfigpEna5OZXLLb/f4KKLZbiTQdCQg7Dsm66mc9x00O717rhG9ico5cgMOfoMxJu4C2pAEsKioqisnslysoaLVkEQ6aMRYxKFc//ZYQr29L10XfhXv4jB52E+OpMAQAA";
+const BYTECODE: &str = "H4sIAAAAAAAA/42NsQmAMBBF74KDWGqnOIIIVmJpYyHYWChiZ5kRxAWcQnScdJY29gZNSAgp8or7x93/fIQfT2jfdAPhiqCQuw9OoBxmLmqLicVbeJTZTmlVB8mVz+e4pOxZb/4n7h2fVy9Ey93kBZmTjiLsAAAA";
 
 #[test]
 fn test_acir_get_circuit_size() {
@@ -13,8 +13,8 @@ fn test_acir_get_circuit_size() {
     let circuit_sizes = unsafe { 
         get_circuit_sizes(&constraint_system_buf, false) 
     }; 
-    assert_eq!(circuit_sizes.total, 3560);
-    assert_eq!(circuit_sizes.subgroup, 4096);
+    assert_eq!(circuit_sizes.total, 56);
+    assert_eq!(circuit_sizes.subgroup, 64);
 }
 
 #[test]
@@ -22,7 +22,8 @@ fn test_prove_and_verify_ultra_honk() {
     let _ = tracing_subscriber::fmt::try_init();
 
     // Setup SRS
-    setup_srs_from_bytecode(BYTECODE, None, false).unwrap();
+    //setup_srs_from_bytecode(BYTECODE, None, false).unwrap();
+    setup_srs(500, None).unwrap();
 
     // Ultra Honk
 
@@ -35,7 +36,7 @@ fn test_prove_and_verify_ultra_honk() {
     let vk = get_ultra_honk_verification_key(BYTECODE, false).unwrap();
     assert_eq!(acir_get_slow_low_memory(), false);
 
-    let proof = prove_ultra_honk(BYTECODE, initial_witness, vk.clone(), false).unwrap();
+    let proof = prove_ultra_honk(BYTECODE, initial_witness, vk.clone(), false, None).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
     assert_eq!(acir_get_slow_low_memory(), false);
 
@@ -68,7 +69,7 @@ fn test_ultra_honk_keccak() {
     let vk = get_ultra_honk_keccak_verification_key(keccak_circuit_bytecode, false, false).unwrap();
     assert_eq!(acir_get_slow_low_memory(), false);
     
-    let proof = prove_ultra_honk_keccak(keccak_circuit_bytecode, initial_witness, vk.clone(), false, false).unwrap();
+    let proof = prove_ultra_honk_keccak(keccak_circuit_bytecode, initial_witness, vk.clone(), false, false, None).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
     assert_eq!(acir_get_slow_low_memory(), false);
 
@@ -101,7 +102,8 @@ fn test_ultra_honk_low_memory() {
     let vk = get_ultra_honk_verification_key(circuit_bytecode, true).unwrap();
     assert_eq!(acir_get_slow_low_memory(), true);
     
-    let proof = prove_ultra_honk(circuit_bytecode, initial_witness, vk.clone(), true).unwrap();
+    // Low memory mode with a limit of 5GB of storage use (fallbacks on using the RAM for the rest)
+    let proof = prove_ultra_honk(circuit_bytecode, initial_witness, vk.clone(), true, Some(5 * 1024 * 1024 * 1024)).unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
     assert_eq!(acir_get_slow_low_memory(), true);
 
@@ -116,8 +118,8 @@ fn test_srs_setup_from_bytecode() {
     let start = std::time::Instant::now();
     let srs = setup_srs_from_bytecode(BYTECODE, None, false).unwrap();
     info!("srs setup time: {:?}", start.elapsed());
-    // 2^5 + 1 = 33
-    assert_eq!(srs, 4097);
+    // 2^6 + 1 = 33
+    assert_eq!(srs, 65);
 }
 
 #[test]
@@ -179,7 +181,7 @@ fn test_ultra_honk_recursive_proving() {
     // y
     initial_witness.insert(Witness(1), FieldElement::from(25u128));
 
-    let (recursed_proof, recursed_vk) = prove_ultra_honk(recursed_circuit_bytecode, initial_witness, true).unwrap();
+    let (recursed_proof, recursed_vk) = prove_ultra_honk(recursed_circuit_bytecode, initial_witness, true, None).unwrap();
 
     let (proof_as_fields, vk_as_fields, key_hash) = recursion::generate_recursive_honk_proof_artifacts(recursed_proof, recursed_vk).unwrap();
 
@@ -221,7 +223,7 @@ fn test_ultra_honk_recursive_proving() {
     // Key hash
     initial_witness_recursive.insert(Witness(index), FieldElement::try_from_str(&key_hash).unwrap());
 
-    let (proof, vk) = prove_ultra_honk(recursive_circuit_bytecode, initial_witness_recursive, true).unwrap();
+    let (proof, vk) = prove_ultra_honk(recursive_circuit_bytecode, initial_witness_recursive, true, None).unwrap();
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     assert!(verdict);

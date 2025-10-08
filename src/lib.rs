@@ -1,4 +1,3 @@
-pub use acir::*;
 pub use acvm::*;
 
 pub mod execute;

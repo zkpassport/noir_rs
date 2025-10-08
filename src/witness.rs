@@ -1,4 +1,4 @@
-use acir::{native_types::{WitnessMap, WitnessStack, Witness}, FieldElement};
+use acvm::acir::{native_types::{WitnessMap, WitnessStack, Witness}, FieldElement};
 
 /// Convert a vector of field elements to a witness map
 /// 
