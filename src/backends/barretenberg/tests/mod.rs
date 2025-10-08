@@ -33,7 +33,7 @@ fn test_prove_and_verify_ultra_honk() {
     let initial_witness = witness::from_vec_to_witness_map(vec![5 as u128, 6 as u128, 30 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let vk = get_ultra_honk_verification_key(BYTECODE, false).unwrap();
+    let vk = get_ultra_honk_verification_key(BYTECODE, false, None).unwrap();
     assert_eq!(acir_get_slow_low_memory(), false);
 
     let proof = prove_ultra_honk(BYTECODE, initial_witness, vk.clone(), false, None).unwrap();
@@ -66,7 +66,7 @@ fn test_ultra_honk_keccak() {
     let initial_witness = witness::from_vec_to_witness_map(vec![2 as u128, 5 as u128, 10 as u128, 15 as u128, 20 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let vk = get_ultra_honk_keccak_verification_key(keccak_circuit_bytecode, false, false).unwrap();
+    let vk = get_ultra_honk_keccak_verification_key(keccak_circuit_bytecode, false, false, None).unwrap();
     assert_eq!(acir_get_slow_low_memory(), false);
     
     let proof = prove_ultra_honk_keccak(keccak_circuit_bytecode, initial_witness, vk.clone(), false, false, None).unwrap();
@@ -99,7 +99,7 @@ fn test_ultra_honk_low_memory() {
     let initial_witness = witness::from_vec_to_witness_map(vec![2 as u128, 5 as u128, 10 as u128, 15 as u128, 20 as u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let vk = get_ultra_honk_verification_key(circuit_bytecode, true).unwrap();
+    let vk = get_ultra_honk_verification_key(circuit_bytecode, true, None).unwrap();
     assert_eq!(acir_get_slow_low_memory(), true);
     
     // Low memory mode with a limit of 5GB of storage use (fallbacks on using the RAM for the rest)
