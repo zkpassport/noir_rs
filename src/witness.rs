@@ -1,4 +1,7 @@
+use std::io::Read;
+
 use acvm::acir::{native_types::{WitnessMap, WitnessStack, Witness}, FieldElement};
+use flate2::read::GzDecoder;
 
 /// Convert a vector of field elements to a witness map
 /// 
@@ -58,20 +61,26 @@ pub fn witness_map_to_witness_stack(witness_map: WitnessMap<FieldElement>) -> Re
     Ok(witness_stack)
 }
 
-/// Serialize the witness stack to a bincode encoded vector
-/// 
+/// Serialize the witness stack using the format from `NOIR_SERIALIZATION_FORMAT`.
+///
+/// The result is the raw (uncompressed) serialized witness suitable for passing
+/// to barretenberg.
+///
 /// # Arguments
-/// 
+///
 /// * witness_stack: The witness stack to serialize
-/// 
+///
 /// # Returns
-/// 
+///
 /// The serialized witness stack
 pub fn serialize_witness(witness_stack: WitnessStack<FieldElement>) -> Result<Vec<u8>, String> {
-    let serialized_witness =
-        bincode::serialize(&witness_stack).map_err(|e| e.to_string())?;
-
-    Ok(serialized_witness)
+    // WitnessStack::serialize() respects NOIR_SERIALIZATION_FORMAT and gzip-compresses
+    let compressed = witness_stack.serialize().map_err(|e| e.to_string())?;
+    // Decompress to get raw bytes for barretenberg
+    let mut decoder = GzDecoder::new(compressed.as_slice());
+    let mut buf = Vec::new();
+    decoder.read_to_end(&mut buf).map_err(|e| e.to_string())?;
+    Ok(buf)
 }
 
 /// Deserialize the witness stack from a bincode encoded vector

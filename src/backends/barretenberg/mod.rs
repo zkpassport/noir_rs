@@ -1,3 +1,4 @@
+pub mod api;
 pub mod prove;
 pub mod verify;
 //pub mod recursion;

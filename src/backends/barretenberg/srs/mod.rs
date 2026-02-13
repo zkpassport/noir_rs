@@ -2,6 +2,7 @@ pub mod localsrs;
 pub mod netsrs;
 use serde::{Deserialize, Serialize};
 
+use crate::backends::barretenberg::api;
 use crate::backends::barretenberg::utils::{get_circuit_size, compute_subgroup_size};
 
 // G2 is a small fixed group, so we can hardcode it here
@@ -21,7 +22,7 @@ impl Srs {
             _ => Srs {
                 g1_data: self.g1_data[..=(num_points * 64 - 1) as usize].to_vec(),
                 g2_data: self.g2_data,
-                num_points: num_points,
+                num_points,
             },
         }
     }
@@ -48,16 +49,16 @@ pub fn get_srs(subgroup_size: u32, srs_path: Option<&str>) -> Srs {
     }
 }
 
-pub fn setup_srs(circuit_size: u32, srs_path: Option<&str>) ->  Result<u32, String> {
+pub fn setup_srs(circuit_size: u32, srs_path: Option<&str>) -> Result<u32, String> {
     let subgroup_size = compute_subgroup_size(circuit_size);
     let srs = get_srs(subgroup_size, srs_path);
-    unsafe {
-        bb_rs::barretenberg_api::srs::init_srs(&srs.g1_data, srs.num_points, &srs.g2_data);
-    }
+
+    api::srs_init(&srs.g1_data, srs.num_points, &srs.g2_data)?;
+
     Ok(srs.num_points)
 }
 
-pub fn setup_srs_from_bytecode(circuit_bytecode: &str, srs_path: Option<&str>, recursive: bool) ->  Result<u32, String> {
+pub fn setup_srs_from_bytecode(circuit_bytecode: &str, srs_path: Option<&str>, recursive: bool) -> Result<u32, String> {
     let circuit_size = get_circuit_size(circuit_bytecode, recursive);
     setup_srs(circuit_size, srs_path)
 }

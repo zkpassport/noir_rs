@@ -1,22 +1,26 @@
-use bb_rs::barretenberg_api::acir::{
-        acir_vk_as_fields_ultra_honk, acir_proof_as_fields_ultra_honk
-};
+// Recursion support is currently disabled pending updates to the barretenberg API.
+//
+// The barretenberg_rs API provides VK-as-fields through the CircuitComputeVk response,
+// which returns both `bytes` and `fields` representations. VK conversion to field
+// elements is also available via the VkAsFields command.
+//
+// To re-enable recursive proving, use:
+//   - api::circuit_compute_vk() for VK fields
+//   - api::vk_as_fields() for converting VK bytes to field elements
+//   - The proof response already contains field-element representations
 
-/*pub fn generate_recursive_honk_proof_artifacts(    
+/*
+use crate::backends::barretenberg::api;
+
+pub fn generate_recursive_honk_proof_artifacts(
     proof_bytes: Vec<u8>,
     vk_bytes: Vec<u8>
-) -> Result<(Vec<String>, Vec<String>), String> {
-    Ok(unsafe {
-        let proof = acir_proof_as_fields_ultra_honk(&proof_bytes);
-        let vk = acir_vk_as_fields_ultra_honk(&vk_bytes);
-        // Get the number of public inputs from the third field of the proof
-        // by parsing from hex to usize
-        let num_public_inputs = usize::from_str_radix(proof[1].trim_start_matches("0x"), 16).unwrap();
-        let end_index_for_proof_without_public_inputs = 3 + num_public_inputs;
-        // We keep the first 3 fields but remove the following public inputs and keep the rest
-        let mut proof_without_public_inputs: Vec<String> = Vec::from(&proof[..3]);
-        proof_without_public_inputs.extend_from_slice(&proof[end_index_for_proof_without_public_inputs..]);
+) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>), String> {
+    let vk_fields = api::vk_as_fields(&vk_bytes)?;
 
-        (proof_without_public_inputs, vk)
-    })
-}*/
+    // The proof is already in field-element format from circuit_prove response
+    let proof_fields = api::proof_bytes_to_fields(&proof_bytes);
+
+    Ok((proof_fields, vk_fields))
+}
+*/

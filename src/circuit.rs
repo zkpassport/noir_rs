@@ -40,18 +40,26 @@ pub fn uncompress_acir_buffer(acir_buffer: Vec<u8>) -> Result<Vec<u8>, String> {
     Ok(acir_buffer_uncompressed)
 }
 
-/// Get the acir buffer (uncompressed) from the circuit bytecode
-/// 
+/// Get the acir buffer (uncompressed) from the circuit bytecode.
+///
+/// Round-trips through `Program` deserialization/serialization to ensure
+/// the output format matches the `NOIR_SERIALIZATION_FORMAT` env var
+/// (e.g. msgpack-compact for barretenberg compatibility).
+///
 /// # Arguments
-/// 
+///
 /// * circuit_bytecode: The circuit bytecode to get the acir buffer from
-/// 
+///
 /// # Returns
-/// 
+///
 /// The acir buffer (uncompressed)
 pub fn get_acir_buffer_uncompressed(circuit_bytecode: &str) -> Result<Vec<u8>, String> {
     let acir_buffer = get_acir_buffer(circuit_bytecode)?;
-    uncompress_acir_buffer(acir_buffer)
+    // Round-trip through Program to re-serialize in the current format
+    let program: Program<FieldElement> = Program::deserialize_program(&acir_buffer)
+        .map_err(|e| format!("Failed to deserialize program: {}", e))?;
+    let reserialized = Program::serialize_program(&program);
+    uncompress_acir_buffer(reserialized)
 }
 
 /// Decode the circuit bytecode into an acir buffer
