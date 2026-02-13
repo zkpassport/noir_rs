@@ -1,33 +1,32 @@
 [package]
 name = "noir_rs"
-version = "1.0.0-beta.14"
+version = "1.0.0-beta.18"
 edition = "2021"
 authors = ["Bartosz Nowak", "Theo Madzou"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-acvm = { git = "https://github.com/noir-lang/noir.git", rev = "v1.0.0-beta.14", package = "acvm" }
-acvm_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", rev = "v1.0.0-beta.14", package = "acvm_blackbox_solver" }
+acvm = { git = "https://github.com/noir-lang/noir.git", rev = "nightly-2026-02-12", package = "acvm" }
+acvm_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", rev = "nightly-2026-02-12", package = "acvm_blackbox_solver" }
 base64 = "0.22.0"
 bincode = "1.3.3"
-bn254_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", rev = "v1.0.0-beta.14", package = "bn254_blackbox_solver" }
+bn254_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", rev = "nightly-2026-02-12", package = "bn254_blackbox_solver" }
 flate2 = "1.0.28"
 hex = "0.4.3"
-nargo = { git = "https://github.com/noir-lang/noir.git", rev = "v1.0.0-beta.14", package = "nargo" }
+nargo = { git = "https://github.com/noir-lang/noir.git", rev = "nightly-2026-02-12", package = "nargo" }
 reqwest = { version = "0.12.1", features = ["blocking"] }
-serde = "1.0.197"
+serde = { version = "1.0.197", features = ["derive"] }
 thiserror = "1.0.58"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 serde_json = "1.0.125"
 
 # Optional dependencies
-bb_rs = { git = "https://github.com/zkpassport/aztec-packages.git", branch = "v2.0.3", optional = true }
+barretenberg-rs = { git = "https://github.com/AztecProtocol/aztec-packages.git", tag = "v4.0.0-nightly.20260212", package = "barretenberg-rs", default-features = false, features = ["ffi"], optional = true }
 openssl = { version = "0.10", features = ["vendored"], optional = true }
 
 [features]
 default = []
-barretenberg = ["bb_rs"]
+barretenberg = ["barretenberg-rs"]
 android-compat = ["openssl"]
-
