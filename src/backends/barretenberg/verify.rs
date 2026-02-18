@@ -1,5 +1,5 @@
 use crate::backends::barretenberg::api::{
-    self, configure_memory, ensure_msgpack_format, proof_bytes_to_fields, settings_ultra_honk_poseidon2, settings_ultra_honk_keccak,
+    self, configure_memory, proof_bytes_to_fields, settings_ultra_honk_poseidon2, settings_ultra_honk_keccak,
     FIELD_ELEMENT_SIZE,
 };
 use crate::circuit::decode_circuit;
@@ -43,8 +43,7 @@ pub fn get_ultra_honk_verification_key(
     circuit_bytecode: &str,
     low_memory_mode: bool,
     max_storage_usage: Option<u64>,
-) -> Result<Vec<u8>, String> {
-    ensure_msgpack_format();
+) -> Result<Vec<u8>, String> {  
     configure_memory(low_memory_mode, max_storage_usage);
     let (_, acir_buffer_uncompressed) =
         decode_circuit(circuit_bytecode).map_err(|e| format!("Failed to decode circuit: {}", e))?;
@@ -91,7 +90,6 @@ pub fn get_ultra_honk_keccak_verification_key(
     low_memory_mode: bool,
     max_storage_usage: Option<u64>,
 ) -> Result<Vec<u8>, String> {
-    ensure_msgpack_format();
     configure_memory(low_memory_mode, max_storage_usage);
     let (_, acir_buffer_uncompressed) =
         decode_circuit(circuit_bytecode).map_err(|e| format!("Failed to decode circuit: {}", e))?;

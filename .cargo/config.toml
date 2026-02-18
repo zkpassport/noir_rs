@@ -1,3 +1,2 @@
 [env]
 RUST_LOG = "info"
-BARRETENBERG_VERSION = "4.0.0-nightly.20260212"

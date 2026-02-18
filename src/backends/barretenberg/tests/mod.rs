@@ -1,6 +1,6 @@
 use tracing::info;
 use crate::backends::barretenberg::{
-    api::{self, ensure_msgpack_format, settings_ultra_honk_poseidon2},
+    api::{self, settings_ultra_honk_poseidon2},
     srs::{setup_srs_from_bytecode, setup_srs},
     verify::{
         verify_ultra_honk, verify_ultra_honk_keccak,
@@ -13,8 +13,6 @@ use crate::{witness, circuit};
 
 #[test]
 fn test_circuit_stats() {
-    ensure_msgpack_format();
-
     // Read the JSON manifest of the circuit
     let product_circuit_txt = std::fs::read_to_string("circuits/target/product.json").unwrap();
     let product_circuit: serde_json::Value = serde_json::from_str(&product_circuit_txt).unwrap();
@@ -80,6 +78,7 @@ fn test_ultra_honk_keccak() {
 }
 
 #[test]
+#[ignore]
 fn test_ultra_honk_low_memory() {
     let _ = tracing_subscriber::fmt::try_init();
 

@@ -1,4 +1,4 @@
-use crate::backends::barretenberg::api::{self, ensure_msgpack_format, settings_ultra_honk_poseidon2};
+use crate::backends::barretenberg::api::{self, settings_ultra_honk_poseidon2};
 use crate::circuit::decode_circuit;
 
 /// Compute the next power of two that is >= `circuit_size`.
@@ -9,7 +9,6 @@ pub fn compute_subgroup_size(circuit_size: u32) -> u32 {
 
 /// Get the total gate count (circuit size) for the given bytecode.
 pub fn get_circuit_size(circuit_bytecode: &str, _recursion: bool) -> u32 {
-    ensure_msgpack_format();
     let (_, acir_buffer_uncompressed) = if let Ok(decoded) = decode_circuit(circuit_bytecode) {
         decoded
     } else {
@@ -26,7 +25,6 @@ pub fn get_circuit_size(circuit_bytecode: &str, _recursion: bool) -> u32 {
 
 /// Get the dyadic (next power-of-two) circuit size for the given bytecode.
 pub fn get_circuit_size_dyadic(circuit_bytecode: &str) -> u32 {
-    ensure_msgpack_format();
     let (_, acir_buffer_uncompressed) = if let Ok(decoded) = decode_circuit(circuit_bytecode) {
         decoded
     } else {

@@ -11,18 +11,7 @@ use barretenberg_rs::{
 
 pub const FIELD_ELEMENT_SIZE: usize = 32;
 
-static INIT_FORMAT: Once = Once::new();
-
-/// Ensure the Noir serialization format is set to msgpack-compact,
-/// which is required by the current version of barretenberg.
-pub fn ensure_msgpack_format() {
-    INIT_FORMAT.call_once(|| {
-        std::env::set_var("NOIR_SERIALIZATION_FORMAT", "msgpack-compact");
-    });
-}
-
 fn get_api() -> BarretenbergApi<FfiBackend> {
-    ensure_msgpack_format();
     let backend = FfiBackend::new().expect("Failed to initialize FfiBackend");
     BarretenbergApi::new(backend)
 }

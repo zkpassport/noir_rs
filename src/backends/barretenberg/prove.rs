@@ -1,7 +1,7 @@
 use acvm::acir::{native_types::WitnessMap, FieldElement};
 
 use crate::backends::barretenberg::api::{
-    self, configure_memory, ensure_msgpack_format, proof_fields_to_bytes, settings_ultra_honk_poseidon2,
+    self, configure_memory, proof_fields_to_bytes, settings_ultra_honk_poseidon2,
     settings_ultra_honk_keccak,
 };
 use crate::circuit::get_acir_buffer_uncompressed;
@@ -30,7 +30,6 @@ pub fn prove_ultra_honk(
     low_memory_mode: bool,
     max_storage_usage: Option<u64>,
 ) -> Result<Vec<u8>, String> {
-    ensure_msgpack_format();
     configure_memory(low_memory_mode, max_storage_usage);
     let witness_stack = execute(circuit_bytecode, initial_witness)?;
     let serialized_solved_witness = serialize_witness(witness_stack)?;
@@ -74,7 +73,6 @@ pub fn prove_ultra_honk_keccak(
     low_memory_mode: bool,
     max_storage_usage: Option<u64>,
 ) -> Result<Vec<u8>, String> {
-    ensure_msgpack_format();
     configure_memory(low_memory_mode, max_storage_usage);
     let witness_stack = execute(circuit_bytecode, initial_witness)?;
     let serialized_solved_witness = serialize_witness(witness_stack)?;
