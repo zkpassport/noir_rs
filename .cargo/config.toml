@@ -1,2 +1,14 @@
 [env]
 RUST_LOG = "info"
+# Android NDK toolchain — resolved automatically by scripts/android-ndk-*.sh
+# Override: ANDROID_NDK_HOME, ANDROID_HOME, ANDROID_API_LEVEL (default: 34)
+CC_aarch64-linux-android = { value = "scripts/android-ndk-cc.sh", relative = true }
+AR_aarch64-linux-android = { value = "scripts/android-ndk-ar.sh", relative = true }
+CC_x86_64-linux-android = { value = "scripts/android-ndk-cc.sh", relative = true }
+AR_x86_64-linux-android = { value = "scripts/android-ndk-ar.sh", relative = true }
+
+[target.aarch64-linux-android]
+linker = "scripts/android-ndk-cc.sh"
+
+[target.x86_64-linux-android]
+linker = "scripts/android-ndk-cc.sh"

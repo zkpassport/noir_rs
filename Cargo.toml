@@ -15,7 +15,7 @@ bn254_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", rev = "
 flate2 = "1.0.28"
 hex = "0.4.3"
 nargo = { git = "https://github.com/noir-lang/noir.git", rev = "v1.0.0-beta.19", package = "nargo" }
-reqwest = { version = "0.12.1", features = ["blocking"] }
+reqwest = { version = "0.12.1", default-features = false, features = ["blocking", "rustls-tls"] }
 serde = { version = "1.0.197", features = ["derive"] }
 thiserror = "1.0.58"
 tracing = "0.1"
@@ -24,9 +24,6 @@ serde_json = "1.0.125"
 
 # Optional dependencies
 barretenberg-rs = { version = "4.0.0-nightly.20260218", default-features = false, features = ["ffi"], optional = true }
-openssl = { version = "0.10", features = ["vendored"], optional = true }
-
 [features]
 default = []
 barretenberg = ["barretenberg-rs"]
-android-compat = ["openssl"]
