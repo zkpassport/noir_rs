@@ -3,9 +3,8 @@
 Rust crate to generate and verify proofs for [Noir](https://github.com/noir-lang/noir) circuits.
 
 This library uses
-[bb.rs](https://github.com/zkpassport/aztec-packages/tree/v0.58.0/barretenberg/bb_rs) to interface
-with Barretenberg, which is optimized to run on mobile platforms (i.e. iOS and Android ARM64), but
-can also be used on desktop platforms.
+[barretenberg-rs](https://github.com/AztecProtocol/aztec-packages/tree/next/barretenberg/rust/barretenberg-rs)
+to interface with Barretenberg.
 
 To use Noir.rs on mobile, please refer to either [Swoir](https://github.com/Swoir/swoir) or
 [Noirandroid](https://github.com/madztheo/noir_android) that provide a much easier interface to
@@ -26,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.3-1" }
+noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.19-1" }
 ```
 
 If you want to use `Barretenberg` as backend for proving and verifying proofs, you need to set the
@@ -34,7 +33,7 @@ If you want to use `Barretenberg` as backend for proving and verifying proofs, y
 
 ```toml
 [dependencies]
-noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.3-1", features = ["barretenberg"] }
+noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.19-1", features = ["barretenberg"] }
 ```
 
 ## Usage
@@ -83,16 +82,15 @@ info!("Proof verification verdict: {}", verdict);
 
 ## Build
 
-To build Noir.rs, you can use the following command (with the `-vvvv` flag to get more information):
+To build Noir.rs, you can use the following command:
 
 ```bash
-# We recommend using the `-vvvv` flag to see the progress of the build as it can take several minutes
-# if you enable `barretenberg`
-cargo build -vvvv
+# Debug build
+cargo build
 # Release build
-cargo build -vvvv --release
+cargo build --release
 # Release build with the `barretenberg` feature
-cargo build -vvvv --release --features barretenberg
+cargo build --release --features barretenberg
 ```
 
 ### iOS cross-compilation
@@ -102,24 +100,35 @@ _Warning: iOS cross-compilation can only be done on macOS._
 Before building Noir.rs for iOS, you need to make sure you have installed XCode and its associated
 command line tools.
 
-You also need to install the iOS target for Rust:
+You also need to install the iOS targets for Rust:
 
 ```bash
+# Physical device
 rustup target add aarch64-apple-ios
+# Simulator
+rustup target add aarch64-apple-ios-sim
 ```
 
-Finally, to cross-compile Noir.rs for iOS (only ARM64 is supported), you can use the following
-command:
+Finally, to cross-compile Noir.rs for iOS, you can use the following command:
 
 ```bash
-# Without setting the deployment target explicitly, the build may fail
-IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build -vvvv --target aarch64-apple-ios
+# Physical device
+
+# Debug build
+cargo build --target aarch64-apple-ios
 # Release build
-IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build -vvvv --target aarch64-apple-ios --release
-# Build with the `barretenberg` feature
-IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build -vvvv --target aarch64-apple-ios --features barretenberg
-# Release build with the `barretenberg` feature
-IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build -vvvv --target aarch64-apple-ios --features barretenberg --release
+cargo build --target aarch64-apple-ios --release
+# With the `barretenberg` feature
+cargo build --target aarch64-apple-ios --features barretenberg
+
+# Simulator
+
+# Debug build
+cargo build --target aarch64-apple-ios-sim
+# Release build
+cargo build --target aarch64-apple-ios-sim --release
+# With the `barretenberg` feature
+cargo build --target aarch64-apple-ios-sim --features barretenberg
 ```
 
 ### Android cross-compilation
@@ -127,50 +136,47 @@ IPHONEOS_DEPLOYMENT_TARGET=15.0 cargo build -vvvv --target aarch64-apple-ios --f
 Android cross-compilation can be done on any desktop platform as long as you have the Android SDK
 and NDK installed. If you don't have it, you can get it by downloading Android Studio.
 
-Before building Noir.rs for Android, you need to set up a few environment variables:
-
-```bash
-# Set the ANDROID_HOME environment variable to the path to your Android SDK
-export ANDROID_HOME=/path/to/your/android-sdk # e.g. /Users/<username>/Library/Android/sdk
-# Set the NDK_VERSION environment variable to the version of the Android NDK you have installed
-export NDK_VERSION=<number>.<number>.<number> # e.g. 26.3.11579264
-# Set the HOST_TAG environment variable to the host tag of your platform
-export HOST_TAG=your-host-tag # e.g. darwin-x86_64 (for macOS)
-# Then you just copy paste the ones below
-export TARGET=aarch64-linux-android
-export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION
-export TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$HOST_TAG
-export API=33
-export AR="$TOOLCHAIN/bin/llvm-ar"
-export CC="$TOOLCHAIN/bin/$TARGET$API-clang"
-export AS="$TOOLCHAIN/bin/$TARGET$API-clang"
-export CXX="$TOOLCHAIN/bin/$TARGET$API-clang++"
-export LD="$TOOLCHAIN/bin/ld"
-export RANLIB="$TOOLCHAIN/bin/llvm-ranlib"
-export STRIP="$TOOLCHAIN/bin/llvm-strip"
-export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin"
-export PATH="$PATH:$TOOLCHAIN/bin"
-export CMAKE_TOOLCHAIN_FILE_aarch64_linux_android="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake"
-export ANDROID_ABI="arm64-v8a"
-```
-
 Also, make sure to install the Android target for Rust:
 
 ```bash
+# ARM64
 rustup target add aarch64-linux-android
+# x86_64
+rustup target add x86_64-linux-android
 ```
 
-Once this is done, you can cross-compile Noir.rs for Android (only ARM64) by running the following
-command:
+Once this is done, you can cross-compile Noir.rs for Android (only ARM64 and x86_64 are supported)
+by running the following command:
 
 ```bash
-cargo build -vvvv --target aarch64-linux-android --features android-compat
-# Release build
-cargo build -vvvv --target aarch64-linux-android --release --features android-compat
-# Build with the `barretenberg` feature
-cargo build -vvvv --target aarch64-linux-android --features barretenberg --features android-compat
-# Release build with the `barretenberg` feature
-cargo build -vvvv --target aarch64-linux-android --features barretenberg --features android-compat --release
+# ARM64
+
+# Debug
+cargo build --target aarch64-linux-android
+# Release
+cargo build --target aarch64-linux-android --release
+# With the `barretenberg` feature
+cargo build --target aarch64-linux-android --features barretenberg
+
+
+# x86_64
+
+# Debug
+cargo build --target x86_64-linux-android
+# Release
+cargo build --target x86_64-linux-android --release
+# With the `barretenberg` feature
+cargo build --target x86_64-linux-android --features barretenberg
+```
+
+By default, the API level is 34. You can change it by setting the `ANDROID_API_LEVEL` environment
+variable.
+
+```bash
+# Set the API level to 33
+ANDROID_API_LEVEL=33 cargo build --target aarch64-linux-android --features barretenberg
+# Set the API level to 33
+ANDROID_API_LEVEL=33 cargo build --target x86_64-linux-android --features barretenberg
 ```
 
 ## Use other backends
