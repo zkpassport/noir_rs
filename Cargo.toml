@@ -23,7 +23,7 @@ tracing-subscriber = "0.3"
 serde_json = "1.0.125"
 
 # Optional dependencies
-barretenberg-rs = { version = "=5.0.0-nightly.20260224", default-features = false, features = ["ffi"], optional = true }
+barretenberg-rs = { version = "=4.2.0-aztecnr-rc.2", default-features = false, features = ["ffi"], optional = true }
 [features]
 default = []
 barretenberg = ["barretenberg-rs"]
