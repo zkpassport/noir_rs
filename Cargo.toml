@@ -14,6 +14,9 @@ bincode = "1.3.3"
 bn254_blackbox_solver = { git = "https://github.com/noir-lang/noir.git", rev = "v1.0.0-beta.19", package = "bn254_blackbox_solver" }
 flate2 = "1.0.28"
 hex = "0.4.3"
+# Fix to address a breaking change not following semver guidelines
+# TODO: remove when updating to a new version of Noir that supports this new change
+keccak = "=0.2.0-rc.0"
 nargo = { git = "https://github.com/noir-lang/noir.git", rev = "v1.0.0-beta.19", package = "nargo" }
 reqwest = { version = "0.12.1", default-features = false, features = ["blocking", "rustls-tls"] }
 serde = { version = "1.0.197", features = ["derive"] }
