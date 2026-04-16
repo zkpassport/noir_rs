@@ -25,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.19-1" }
+noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.20-1" }
 ```
 
 If you want to use `Barretenberg` as backend for proving and verifying proofs, you need to set the
@@ -33,7 +33,7 @@ If you want to use `Barretenberg` as backend for proving and verifying proofs, y
 
 ```toml
 [dependencies]
-noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.19-1", features = ["barretenberg"] }
+noir_rs = { git = "https://github.com/zkpassport/noir_rs.git", tag = "v1.0.0-beta.20-1", features = ["barretenberg"] }
 ```
 
 ## Usage
