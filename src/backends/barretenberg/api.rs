@@ -1,10 +1,10 @@
 use barretenberg_rs::{
-    BarretenbergApi,
     backends::FfiBackend,
     generated_types::{
-        CircuitInput, CircuitInputNoVK, ProofSystemSettings,
-        CircuitProveResponse, CircuitComputeVkResponse, CircuitInfoResponse,
+        CircuitComputeVkResponse, CircuitInfoResponse, CircuitInput, CircuitInputNoVK,
+        CircuitProveResponse, ProofSystemSettings,
     },
+    BarretenbergApi,
 };
 
 pub const FIELD_ELEMENT_SIZE: usize = 32;
@@ -33,7 +33,10 @@ pub fn settings_ultra_honk_keccak(disable_zk: bool) -> ProofSystemSettings {
 }
 
 pub fn proof_fields_to_bytes(proof_fields: &[Vec<u8>]) -> Vec<u8> {
-    proof_fields.iter().flat_map(|f| f.iter().copied()).collect()
+    proof_fields
+        .iter()
+        .flat_map(|f| f.iter().copied())
+        .collect()
 }
 
 pub fn proof_bytes_to_fields(proof_bytes: &[u8]) -> Vec<Vec<u8>> {
@@ -99,11 +102,7 @@ pub fn circuit_stats(
         .map_err(|e| format!("circuit_stats failed: {}", e))
 }
 
-pub fn srs_init(
-    g1_data: &[u8],
-    num_points: u32,
-    g2_data: &[u8],
-) -> Result<(), String> {
+pub fn srs_init(g1_data: &[u8], num_points: u32, g2_data: &[u8]) -> Result<(), String> {
     let mut api = get_api();
     api.srs_init_srs(g1_data, num_points, g2_data)
         .map_err(|e| format!("srs_init failed: {}", e))?;
