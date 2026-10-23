@@ -30,15 +30,10 @@ impl NetSrs {
         let g1_end: u32 = num_points * 64 - 1;
 
         let mut headers = HeaderMap::new();
-        headers.insert(
-            RANGE,
-            format!("bytes={}-{}", 0, g1_end).parse().unwrap(),
-        );
+        headers.insert(RANGE, format!("bytes={}-{}", 0, g1_end).parse().unwrap());
 
         let response = Client::new()
-            .get(
-                "https://crs.aztec.network/g1.dat",
-            )
+            .get("https://crs.aztec.network/g1.dat")
             .headers(headers)
             .send()
             .unwrap();
@@ -48,9 +43,7 @@ impl NetSrs {
 
     fn download_g2_data() -> Vec<u8> {
         let response = Client::new()
-            .get(
-                "https://crs.aztec.network/g2.dat",
-            )
+            .get("https://crs.aztec.network/g2.dat")
             .send()
             .unwrap();
 

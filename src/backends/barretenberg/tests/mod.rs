@@ -1,15 +1,15 @@
-use tracing::info;
 use crate::backends::barretenberg::{
     api::{self, settings_ultra_honk_poseidon2},
-    srs::{setup_srs_from_bytecode, setup_srs},
-    verify::{
-        verify_ultra_honk, verify_ultra_honk_keccak,
-        get_ultra_honk_verification_key, get_ultra_honk_keccak_verification_key,
-    },
     prove::{prove_ultra_honk, prove_ultra_honk_keccak},
+    srs::{setup_srs, setup_srs_from_bytecode},
     utils::compute_subgroup_size,
+    verify::{
+        get_ultra_honk_keccak_verification_key, get_ultra_honk_verification_key, verify_ultra_honk,
+        verify_ultra_honk_keccak,
+    },
 };
-use crate::{witness, circuit};
+use crate::{circuit, witness};
+use tracing::info;
 
 /// Barretenberg only honors the first SRS initialization of the process (see
 /// `setup_srs`), and all tests here share one process. Initialize the SRS once,
@@ -51,7 +51,14 @@ fn test_prove_and_verify_ultra_honk() {
     let start = std::time::Instant::now();
     let vk = get_ultra_honk_verification_key(product_circuit_bytecode, false, None).unwrap();
 
-    let proof = prove_ultra_honk(product_circuit_bytecode, initial_witness, vk.clone(), false, None).unwrap();
+    let proof = prove_ultra_honk(
+        product_circuit_bytecode,
+        initial_witness,
+        vk.clone(),
+        false,
+        None,
+    )
+    .unwrap();
     info!("ultra honk proof generation time: {:?}", start.elapsed());
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
@@ -72,13 +79,26 @@ fn test_ultra_honk_keccak() {
     setup_test_srs();
 
     // Get the witness map from the vector of field elements
-    let initial_witness = witness::from_vec_to_witness_map(vec![2_u128, 5_u128, 10_u128, 15_u128, 20_u128]).unwrap();
+    let initial_witness =
+        witness::from_vec_to_witness_map(vec![2_u128, 5_u128, 10_u128, 15_u128, 20_u128]).unwrap();
 
     let start = std::time::Instant::now();
-    let vk = get_ultra_honk_keccak_verification_key(keccak_circuit_bytecode, false, false, None).unwrap();
+    let vk = get_ultra_honk_keccak_verification_key(keccak_circuit_bytecode, false, false, None)
+        .unwrap();
 
-    let proof = prove_ultra_honk_keccak(keccak_circuit_bytecode, initial_witness, vk.clone(), false, false, None).unwrap();
-    info!("ultra honk keccak proof generation time: {:?}", start.elapsed());
+    let proof = prove_ultra_honk_keccak(
+        keccak_circuit_bytecode,
+        initial_witness,
+        vk.clone(),
+        false,
+        false,
+        None,
+    )
+    .unwrap();
+    info!(
+        "ultra honk keccak proof generation time: {:?}",
+        start.elapsed()
+    );
 
     let verdict = verify_ultra_honk_keccak(proof, vk, false).unwrap();
     info!("honk keccak proof verification verdict: {}", verdict);
@@ -99,14 +119,25 @@ fn test_ultra_honk_low_memory() {
     setup_srs_from_bytecode(circuit_bytecode, None, false).unwrap();
 
     // Get the witness map from the vector of field elements
-    let initial_witness = witness::from_vec_to_witness_map(vec![2_u128, 5_u128, 10_u128, 15_u128, 20_u128]).unwrap();
+    let initial_witness =
+        witness::from_vec_to_witness_map(vec![2_u128, 5_u128, 10_u128, 15_u128, 20_u128]).unwrap();
 
     let start = std::time::Instant::now();
     let vk = get_ultra_honk_verification_key(circuit_bytecode, true, None).unwrap();
 
     // Low memory mode with a limit of 5GB of storage use (falls back to RAM for the rest)
-    let proof = prove_ultra_honk(circuit_bytecode, initial_witness, vk.clone(), true, Some(5 * 1024 * 1024 * 1024)).unwrap();
-    info!("ultra honk low memory proof generation time: {:?}", start.elapsed());
+    let proof = prove_ultra_honk(
+        circuit_bytecode,
+        initial_witness,
+        vk.clone(),
+        true,
+        Some(5 * 1024 * 1024 * 1024),
+    )
+    .unwrap();
+    info!(
+        "ultra honk low memory proof generation time: {:?}",
+        start.elapsed()
+    );
 
     let verdict = verify_ultra_honk(proof, vk).unwrap();
     info!("honk low memory proof verification verdict: {}", verdict);
