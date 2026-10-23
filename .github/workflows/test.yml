@@ -1,51 +1,49 @@
-# Based on https://github.com/actions-rs/meta/blob/master/recipes/quickstart.md
-#
-# While our "example" application has the platform-specific code,
-# for simplicity we are compiling and testing everything on the Ubuntu environment only.
-# For multi-OS testing see the `cross.yml` workflow.
-
-on: [push, pull_request]
-
 name: noir_rs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   fmt:
     name: Fmt check
     runs-on: ubuntu-latest
-    container:
-      image: docker.io/rust:latest
-    
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
-        with:
-            submodules: 'true'
+        uses: actions/checkout@v4
 
-      - name: Test
+      - name: Check formatting
         run: cargo fmt --check
 
   test:
-    name: Build&Test
+    name: Build & Test
     runs-on: ubuntu-latest
-    container:
-      image: docker.io/rust:latest
-    
+    timeout-minutes: 60
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
-        with:
-            submodules: 'true'
-      
-      - name: Install | Clang
-        run: apt update && apt install -y libclang-dev
+        uses: actions/checkout@v4
 
-      - name: Install | CMake
-        uses: jwlawson/actions-setup-cmake@v1.13
+      # The test circuits must be compiled with the Noir release the noir crates come from.
+      - name: Read the Noir version from Cargo.toml
+        id: noir-version
+        run: |
+          VERSION=$(sed -n 's/^nargo = .*rev = "v\([^"]*\)".*/\1/p' Cargo.toml)
+          test -n "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install nargo
+        uses: noir-lang/noirup@v0.1.4
         with:
-          cmake-version: '3.24.0'
+          toolchain: ${{ steps.noir-version.outputs.version }}
+
+      - name: Compile the test circuits
+        run: nargo compile --workspace
+        working-directory: circuits
 
       - name: Build
-        run: cargo build -vv
-        
+        run: cargo build
+
       - name: Test
-        run: cargo test -vv
+        run: cargo test --features barretenberg

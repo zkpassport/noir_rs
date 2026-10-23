@@ -1,8 +1,8 @@
 use acvm::acir::{native_types::WitnessMap, FieldElement};
 
 use crate::backends::barretenberg::api::{
-    self, configure_memory, proof_fields_to_bytes, settings_ultra_honk_poseidon2,
-    settings_ultra_honk_keccak,
+    self, configure_memory, proof_fields_to_bytes, settings_ultra_honk_keccak,
+    settings_ultra_honk_poseidon2,
 };
 use crate::circuit::get_acir_buffer_uncompressed;
 use crate::execute::execute;
