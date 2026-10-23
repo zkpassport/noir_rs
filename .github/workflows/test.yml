@@ -42,6 +42,10 @@ jobs:
         run: nargo compile --workspace
         working-directory: circuits
 
+      # barretenberg-rs links a prebuilt barretenberg library that is built against LLVM's libc++.
+      - name: Install libc++
+        run: sudo apt-get update && sudo apt-get install -y libc++-dev libc++abi-dev
+
       - name: Build
         run: cargo build
 
