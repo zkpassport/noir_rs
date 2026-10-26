@@ -1,6 +1,6 @@
 use crate::backends::barretenberg::api::{
-    self, configure_memory, proof_bytes_to_fields, settings_ultra_honk_poseidon2, settings_ultra_honk_keccak,
-    FIELD_ELEMENT_SIZE,
+    self, configure_memory, proof_bytes_to_fields, settings_ultra_honk_keccak,
+    settings_ultra_honk_poseidon2, FIELD_ELEMENT_SIZE,
 };
 use crate::circuit::decode_circuit;
 
@@ -13,13 +13,17 @@ fn split_proof(proof: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>), String> {
         return Err("Proof too short to contain public inputs count".to_string());
     }
     let num_pub = u32::from_be_bytes(
-        proof[0..4].try_into().map_err(|_| "Failed to read num_public_inputs")?
+        proof[0..4]
+            .try_into()
+            .map_err(|_| "Failed to read num_public_inputs")?,
     ) as usize;
     let pub_bytes_len = num_pub * FIELD_ELEMENT_SIZE;
     if proof.len() < 4 + pub_bytes_len {
         return Err(format!(
             "Proof too short: expected at least {} bytes for {} public inputs, got {}",
-            4 + pub_bytes_len, num_pub, proof.len()
+            4 + pub_bytes_len,
+            num_pub,
+            proof.len()
         ));
     }
     let public_inputs = proof_bytes_to_fields(&proof[4..4 + pub_bytes_len]);
@@ -43,7 +47,7 @@ pub fn get_ultra_honk_verification_key(
     circuit_bytecode: &str,
     low_memory_mode: bool,
     max_storage_usage: Option<u64>,
-) -> Result<Vec<u8>, String> {  
+) -> Result<Vec<u8>, String> {
     configure_memory(low_memory_mode, max_storage_usage);
     let (_, acir_buffer_uncompressed) =
         decode_circuit(circuit_bytecode).map_err(|e| format!("Failed to decode circuit: {}", e))?;

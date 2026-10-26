@@ -16,7 +16,15 @@ use crate::circuit::decode_circuit;
 static SRS_NUM_POINTS: Mutex<Option<u32>> = Mutex::new(None);
 
 // G2 is a small fixed group, so we can hardcode it here
-const G2: [u8; 128] = [1, 24, 196, 213, 184, 55, 188, 194, 188, 137, 181, 179, 152, 181, 151, 78, 159, 89, 68, 7, 59, 50, 7, 139, 126, 35, 31, 236, 147, 136, 131, 176, 38, 14, 1, 178, 81, 246, 241, 199, 231, 255, 78, 88, 7, 145, 222, 232, 234, 81, 216, 122, 53, 142, 3, 139, 78, 254, 48, 250, 192, 147, 131, 193, 34, 254, 189, 163, 192, 192, 99, 42, 86, 71, 91, 66, 20, 229, 97, 94, 17, 230, 221, 63, 150, 230, 206, 162, 133, 74, 135, 212, 218, 204, 94, 85, 4, 252, 99, 105, 247, 17, 15, 227, 210, 81, 86, 193, 187, 154, 114, 133, 156, 242, 160, 70, 65, 249, 155, 164, 238, 65, 60, 128, 218, 106, 95, 228];
+const G2: [u8; 128] = [
+    1, 24, 196, 213, 184, 55, 188, 194, 188, 137, 181, 179, 152, 181, 151, 78, 159, 89, 68, 7, 59,
+    50, 7, 139, 126, 35, 31, 236, 147, 136, 131, 176, 38, 14, 1, 178, 81, 246, 241, 199, 231, 255,
+    78, 88, 7, 145, 222, 232, 234, 81, 216, 122, 53, 142, 3, 139, 78, 254, 48, 250, 192, 147, 131,
+    193, 34, 254, 189, 163, 192, 192, 99, 42, 86, 71, 91, 66, 20, 229, 97, 94, 17, 230, 221, 63,
+    150, 230, 206, 162, 133, 74, 135, 212, 218, 204, 94, 85, 4, 252, 99, 105, 247, 17, 15, 227,
+    210, 81, 86, 193, 187, 154, 114, 133, 156, 242, 160, 70, 65, 249, 155, 164, 238, 65, 60, 128,
+    218, 106, 95, 228,
+];
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Srs {
@@ -37,7 +45,6 @@ impl Srs {
         }
     }
 }
-
 
 pub fn get_srs(subgroup_size: u32, srs_path: Option<&str>) -> Srs {
     match srs_path {
@@ -88,7 +95,11 @@ pub fn setup_srs(circuit_size: u32, srs_path: Option<&str>) -> Result<u32, Strin
     Ok(srs.num_points)
 }
 
-pub fn setup_srs_from_bytecode(circuit_bytecode: &str, srs_path: Option<&str>, _recursive: bool) -> Result<u32, String> {
+pub fn setup_srs_from_bytecode(
+    circuit_bytecode: &str,
+    srs_path: Option<&str>,
+    _recursive: bool,
+) -> Result<u32, String> {
     let (_, acir_buffer_uncompressed) = decode_circuit(circuit_bytecode)?;
     let settings = settings_ultra_honk_poseidon2();
     let info = api::circuit_stats(&acir_buffer_uncompressed, &settings)?;
